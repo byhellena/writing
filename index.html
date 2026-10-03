@@ -376,26 +376,34 @@ function switchTab(tab){
     loadWall();
   }
 }
-
 async function processOCR(event){
   const file = event.target.files[0];
   if(!file) return;
   const status = document.getElementById('ocr-status');
   status.classList.remove('hidden');
+  status.textContent = '🔍 손글씨 인식 중... 잠깐만요!';
+
+  const hideStatus = () => {
+    status.classList.add('hidden');
+    event.target.value = '';
+  };
+
   try {
-    const worker = await Tesseract.createWorker('eng');
+    const worker = await Tesseract.createWorker('eng', 1, {
+      logger: () => {}
+    });
     const { data: { text } } = await worker.recognize(file);
     await worker.terminate();
+    hideStatus();
     parseOCR(text);
     showToast('📝 인식 완료! 파란 칸을 확인하고 수정해 주세요.');
   } catch(e) {
-    console.error(e);
-    showToast('인식에 실패했어요. 직접 입력해 주세요.');
-  } finally {
-    status.classList.add('hidden');
-    event.target.value = '';
+    console.error('OCR 오류:', e);
+    hideStatus();
+    showToast('📷 인식에 실패했어요. 칸을 직접 입력해 주세요.');
   }
 }
+
 
 function parseOCR(raw){
   const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
@@ -462,7 +470,9 @@ async function submitWriting(){
     f_food: document.getElementById('f-food').value.trim(),
     f_food_val: document.getElementById('f-food-val').value.trim(),
   };
-  const filled = [fields.f_subject_val, fields.f_like, fields.f_color_val, fields.f_food_val].some(v=>v);
+  const filled = Object.entries(fields)
+    .filter(([k]) => !['class_num','author_name'].includes(k))
+    .some(([,v]) => v && v.trim());
   if(!filled){ showToast('내용을 하나 이상 입력해 주세요!'); return; }
   if(sb){
     const { error } = await sb.from('writings').upsert(fields, { onConflict: 'class_num,author_name' });
