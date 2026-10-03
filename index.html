@@ -112,6 +112,7 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
   color:var(--blue);font-size:16px;font-weight:800;padding:6px 8px;
   text-align:center;min-width:80px;max-width:100%;
 }
+.ws-input::placeholder{color:#b9c2d4;font-weight:600;font-style:italic;opacity:1;}
 .ws-input:focus{outline:none;border-bottom-color:#2563eb;}
 .ws-input.wide{min-width:160px;}
 .ws-dot{font-weight:900;color:#333;}
@@ -241,28 +242,28 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
       </div>
       <div class="ws-row">
         <span>My favorite</span>
-        <input autocomplete="off" class="ws-input" id="f-subject" placeholder="subject" maxlength="20">
+        <input autocomplete="off" class="ws-input" id="f-subject" maxlength="20">
         <span>is</span>
-        <input autocomplete="off" class="ws-input" id="f-subject-val" placeholder="music" maxlength="30">
+        <input autocomplete="off" class="ws-input" id="f-subject-val" maxlength="30">
         <span class="ws-dot">.</span>
       </div>
       <div class="ws-row">
         <span>I like</span>
-        <input autocomplete="off" class="ws-input wide" id="f-like" placeholder="playing the piano" maxlength="50">
+        <input autocomplete="off" class="ws-input wide" id="f-like" maxlength="50">
         <span class="ws-dot">.</span>
       </div>
       <div class="ws-row">
         <span>My favorite</span>
-        <input autocomplete="off" class="ws-input" id="f-color" placeholder="color" maxlength="20">
+        <input autocomplete="off" class="ws-input" id="f-color" maxlength="20">
         <span>is</span>
-        <input autocomplete="off" class="ws-input" id="f-color-val" placeholder="green" maxlength="30">
+        <input autocomplete="off" class="ws-input" id="f-color-val" maxlength="30">
         <span class="ws-dot">.</span>
       </div>
       <div class="ws-row">
         <span>My</span>
-        <input autocomplete="off" class="ws-input" id="f-food" placeholder="favorite food" maxlength="20">
+        <input autocomplete="off" class="ws-input" id="f-food" maxlength="20">
         <span>is</span>
-        <input autocomplete="off" class="ws-input" id="f-food-val" placeholder="steak" maxlength="30">
+        <input autocomplete="off" class="ws-input" id="f-food-val" maxlength="30">
         <span class="ws-dot">.</span>
       </div>
       <div class="ws-row" style="border-bottom:none;">
@@ -776,4 +777,3 @@ window.addEventListener('pageshow', e => { if(e.persisted) freshStart(); });
 </script>
 </body>
 </html>
-
