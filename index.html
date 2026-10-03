@@ -14,18 +14,19 @@
   --wall-bg:#E8EDF5; --line:#E0E0E0; --r:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{width:100%;height:100%;overflow-x:hidden;}
+html,body{width:100%;min-height:100%;overflow-x:hidden;}
 body{font-family:'Nunito',sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;}
 .hidden{display:none!important;}
-.screen{min-height:100vh;display:flex;flex-direction:column;}
+.screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;}
 button{font-family:'Nunito',sans-serif;cursor:pointer;border:none;transition:.15s;}
 button:active{transform:scale(.97);}
+button:disabled{opacity:.6;cursor:default;}
 input,select,textarea{font-family:'Nunito',sans-serif;}
 #toast{
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
   background:var(--ink);color:#fff;padding:11px 22px;border-radius:999px;
   font-size:14px;font-weight:700;opacity:0;transition:.25s;z-index:999;
-  pointer-events:none;white-space:nowrap;
+  pointer-events:none;white-space:normal;max-width:90vw;text-align:center;
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .modal-overlay{
@@ -83,7 +84,7 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
 .tab-btn{padding:8px 14px;border-radius:999px;font-size:13px;font-weight:800;background:#f0f4ff;color:#6b7faa;}
 .tab-btn.active{background:var(--blue);color:#fff;box-shadow:0 3px 8px rgba(79,142,247,.3);}
 .ranking-btn{padding:8px 12px;border-radius:999px;font-size:13px;font-weight:800;background:#f5f0ff;color:var(--purple);}
-#screen-write{flex:1;padding:16px;max-width:720px;margin:0 auto;width:100%;}
+#screen-write{flex:1;padding:16px 16px 140px;max-width:720px;margin:0 auto;width:100%;}
 .section-title{font-size:18px;font-weight:900;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 .ocr-zone{
   border:2.5px dashed #b3c8ff;border-radius:14px;background:var(--blue-light);
@@ -92,7 +93,7 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
 .ocr-zone p{font-size:13px;color:#6b7faa;margin-bottom:10px;line-height:1.5;}
 .ocr-label{
   display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;
-  padding:10px 18px;border-radius:999px;font-size:14px;font-weight:800;cursor:pointer;
+  padding:10px 18px;border-radius:999px;font-size:14px;font-weight:800;cursor:pointer;margin:3px;
 }
 .ocr-status{margin-top:10px;font-size:13px;font-weight:700;color:var(--blue);}
 .worksheet{background:#fff;border:2px solid #e0eaff;border-radius:16px;padding:20px;}
@@ -109,7 +110,7 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
 .ws-input{
   border:none;border-bottom:2.5px solid var(--blue);background:transparent;
   color:var(--blue);font-size:16px;font-weight:800;padding:6px 8px;
-  text-align:center;min-width:80px;
+  text-align:center;min-width:80px;max-width:100%;
 }
 .ws-input:focus{outline:none;border-bottom-color:#2563eb;}
 .ws-input.wide{min-width:160px;}
@@ -163,7 +164,7 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
 .rank-pos{font-size:18px;font-weight:900;color:var(--purple);min-width:36px;}
 .rank-name{font-size:15px;font-weight:800;}
 .rank-score{background:var(--purple);color:#fff;font-size:13px;font-weight:800;padding:4px 12px;border-radius:999px;}
-@media(min-width:600px){.wall-grid{columns:3;} #screen-write{padding:20px 28px;}}
+@media(min-width:600px){.wall-grid{columns:3;} #screen-write{padding:20px 28px 140px;}}
 </style>
 </head>
 <body>
@@ -220,7 +221,11 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
       <p>공책에 연필로 쓴 글을 사진으로 찍어 올리면<br>파란색 칸을 자동으로 채워드려요!</p>
       <label class="ocr-label">
         📷 사진 찍기
-        <input type="file" id="ocr-input" accept="image/*" capture="environment" class="hidden" onchange="processOCR(event)">
+        <input type="file" accept="image/*" capture="environment" class="hidden" onchange="processOCR(event)">
+      </label>
+      <label class="ocr-label" style="background:#6b7faa;">
+        🖼️ 앨범에서 선택
+        <input type="file" accept="image/*" class="hidden" onchange="processOCR(event)">
       </label>
       <div id="ocr-status" class="ocr-status hidden">🔍 손글씨 인식 중... 잠깐만요!</div>
     </div>
@@ -261,7 +266,7 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
         <span>How about you?</span>
       </div>
     </div>
-    <button class="btn btn-primary btn-full" onclick="submitWriting()" style="margin-top:18px;font-size:16px;padding:15px;">
+    <button id="submit-btn" class="btn btn-primary btn-full" onclick="submitWriting()" style="margin-top:18px;font-size:16px;padding:15px;">
       ✈️ 제출하기
     </button>
   </div>
@@ -339,12 +344,13 @@ let guessChancesLeft = 3;
 let guessAlreadyCorrect = false;
 const CARD_COLORS = ['yellow','blue','green','pink'];
 const PINS = ['📌','📎','🖇️','🔖'];
+const FIELD_IDS = ['f-subject','f-subject-val','f-like','f-color','f-color-val','f-food','f-food-val'];
 
 function esc(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2000);
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600);
 }
 function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
 function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
@@ -354,6 +360,7 @@ function handleLogin(){
   const name = document.getElementById('login-name').value.trim();
   if(!name){ showToast('이름을 입력해 주세요!'); return; }
   currentUser = { classNum: cls, name };
+  try{ localStorage.setItem('user', JSON.stringify(currentUser)); }catch(_){}
   document.getElementById('hdr-class').textContent = cls;
   document.getElementById('hdr-name').textContent = name;
   document.getElementById('wall-title').textContent = `${cls}반 비밀 담벼락 📌`;
@@ -376,115 +383,140 @@ function switchTab(tab){
     loadWall();
   }
 }
+
+/* ---------- 이미지 축소 (메모리 부족 방지) ---------- */
+function resizeImage(file, maxSide = 1400){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * s);
+      c.height = Math.round(img.height * s);
+      const ctx = c.getContext('2d');
+      ctx.filter = 'grayscale(1) contrast(1.4)';
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? resolve(b) : reject(new Error('blob')), 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('img')); };
+    img.src = url;
+  });
+}
+
+/* ---------- OCR ---------- */
+let ocrBusy = false;
 async function processOCR(event){
-  const file = event.target.files[0];
-  if(!file) return;
+  const input = event.target;
+  const file = input.files[0];
+  if(!file || ocrBusy) return;
+  ocrBusy = true;
   const status = document.getElementById('ocr-status');
   status.classList.remove('hidden');
-  status.textContent = '🔍 손글씨 인식 중... 잠깐만요!';
-
-  const hideStatus = () => {
-    status.classList.add('hidden');
-    event.target.value = '';
-  };
-
+  status.textContent = '🔍 손글씨 인식 중... (최대 45초)';
+  let worker = null;
   try {
-    const worker = await Tesseract.createWorker('eng', 1, {
-      logger: () => {}
-    });
-    const { data: { text } } = await worker.recognize(file);
-    await worker.terminate();
-    hideStatus();
-    parseOCR(text);
-    showToast('📝 인식 완료! 파란 칸을 확인하고 수정해 주세요.');
-  } catch(e) {
+    const blob = await resizeImage(file);
+    worker = await Tesseract.createWorker('eng');
+    const res = await Promise.race([
+      worker.recognize(blob),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000))
+    ]);
+    const n = parseOCR(res.data.text || '');
+    showToast(n ? '📝 인식 완료! 파란 칸을 확인하고 수정해 주세요.'
+                : '🤔 글자를 못 찾았어요. 직접 입력해 주세요.');
+  } catch(e){
     console.error('OCR 오류:', e);
-    hideStatus();
     showToast('📷 인식에 실패했어요. 칸을 직접 입력해 주세요.');
+  } finally {
+    if(worker){ try{ await worker.terminate(); }catch(_){} }
+    status.classList.add('hidden');
+    input.value = '';
+    ocrBusy = false;
   }
 }
-
 
 function parseOCR(raw){
-  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
-  for(const line of lines){
-    const lo = line.toLowerCase();
-    if(lo.includes('hello') && lo.includes('name')) continue;
-    if(lo.includes('how about')) continue;
-    if(lo.startsWith('i like')){
-      const val = line.replace(/i like/i,'').replace(/\./g,'').trim();
-      if(val) setIfEmpty('f-like', val);
+  const out = {};
+  const clean = s => s.replace(/[|_~^<>\[\]{}]/g,'').replace(/\.+\s*$/,'').trim();
+  for(const l of raw.split('\n')){
+    const line = l.replace(/[|_~^<>\[\]{}]/g,'').trim();
+    if(!line || /hello|name is|how about/i.test(line)) continue;
+    let m;
+    if((m = line.match(/^i\s+like\s+(.+)/i))){ out['f-like'] = clean(m[1]); continue; }
+    if((m = line.match(/^my\s+favou?rite\s+(.+?)\s+is\s+(.+)/i))){
+      const cat = clean(m[1]), val = clean(m[2]);
+      if(/food/i.test(cat)){ out['f-food']=cat; out['f-food-val']=val; }
+      else if(/colou?r/i.test(cat) || out['f-subject']){ out['f-color']=cat; out['f-color-val']=val; }
+      else { out['f-subject']=cat; out['f-subject-val']=val; }
       continue;
     }
-    const mf = lo.match(/my\s+favorite\s+(\w[\w\s]*?)\s+is\s+(.+)/);
-    if(mf){
-      const cat = mf[1].trim();
-      const val = mf[2].replace(/\./g,'').trim();
-      const catOrig = extractOrigCase(line, mf[1]);
-      const valOrig = extractOrigCase(line, mf[2].replace(/\./g,'').trim());
-      if(/colou?r/.test(cat)){
-        setIfEmpty('f-color', catOrig || cat);
-        setIfEmpty('f-color-val', valOrig || val);
-      } else {
-        if(!document.getElementById('f-subject').value){
-          setIfEmpty('f-subject', catOrig || cat);
-          setIfEmpty('f-subject-val', valOrig || val);
-        } else {
-          setIfEmpty('f-color', catOrig || cat);
-          setIfEmpty('f-color-val', valOrig || val);
-        }
-      }
-      continue;
-    }
-    const my = lo.match(/my\s+(.+?)\s+is\s+(.+)/);
-    if(my){
-      const catOrig = extractOrigCase(line, my[1]);
-      const valOrig = extractOrigCase(line, my[2].replace(/\./g,'').trim());
-      setIfEmpty('f-food', catOrig || my[1].trim());
-      setIfEmpty('f-food-val', valOrig || my[2].replace(/\./g,'').trim());
+    if((m = line.match(/^my\s+(.+?)\s+is\s+(.+)/i))){
+      out['f-food'] = clean(m[1]); out['f-food-val'] = clean(m[2]);
     }
   }
+  const keys = Object.keys(out).filter(k => out[k]);
+  keys.forEach(id => {
+    const el = document.getElementById(id);
+    el.value = out[id].slice(0, el.maxLength > 0 ? el.maxLength : 99);
+  });
+  saveDraft();
+  return keys.length;
 }
 
-function extractOrigCase(line, match){
-  const lo = line.toLowerCase();
-  const idx = lo.indexOf(match.toLowerCase());
-  if(idx>=0) return line.slice(idx, idx+match.length).trim();
-  return match;
+/* ---------- 임시 저장 ---------- */
+function saveDraft(){
+  const d = {}; FIELD_IDS.forEach(id => d[id] = document.getElementById(id).value);
+  try{ localStorage.setItem('draft', JSON.stringify(d)); }catch(_){}
 }
-
-function setIfEmpty(id, val){
-  const el = document.getElementById(id);
-  if(el && !el.value) el.value = val;
+function restoreDraft(){
+  try{
+    const d = JSON.parse(localStorage.getItem('draft') || '{}');
+    FIELD_IDS.forEach(id => { if(d[id]) document.getElementById(id).value = d[id]; });
+  }catch(_){}
 }
+FIELD_IDS.forEach(id => document.getElementById(id).addEventListener('input', saveDraft));
 
+/* ---------- 제출 ---------- */
+let submitting = false;
 async function submitWriting(){
+  if(submitting) return;
+  const v = id => document.getElementById(id).value.trim();
   const fields = {
     class_num: currentUser.classNum,
     author_name: currentUser.name,
-    f_subject: document.getElementById('f-subject').value.trim(),
-    f_subject_val: document.getElementById('f-subject-val').value.trim(),
-    f_like: document.getElementById('f-like').value.trim(),
-    f_color: document.getElementById('f-color').value.trim(),
-    f_color_val: document.getElementById('f-color-val').value.trim(),
-    f_food: document.getElementById('f-food').value.trim(),
-    f_food_val: document.getElementById('f-food-val').value.trim(),
+    f_subject: v('f-subject'), f_subject_val: v('f-subject-val'),
+    f_like: v('f-like'),
+    f_color: v('f-color'), f_color_val: v('f-color-val'),
+    f_food: v('f-food'), f_food_val: v('f-food-val'),
   };
-  const filled = Object.entries(fields)
-    .filter(([k]) => !['class_num','author_name'].includes(k))
-    .some(([,v]) => v && v.trim());
-  if(!filled){ showToast('내용을 하나 이상 입력해 주세요!'); return; }
-  if(sb){
-    const { error } = await sb.from('writings').upsert(fields, { onConflict: 'class_num,author_name' });
-    if(error){ showToast('저장 중 오류: ' + error.message); return; }
-  } else {
-    let mock = JSON.parse(localStorage.getItem('mock_writings')||'[]');
-    mock = mock.filter(w=>!(w.class_num===fields.class_num && w.author_name===fields.author_name));
-    mock.push({ ...fields, id: Date.now() });
-    localStorage.setItem('mock_writings', JSON.stringify(mock));
+  if(!FIELD_IDS.some(id => v(id))){ showToast('내용을 하나 이상 입력해 주세요!'); return; }
+
+  submitting = true;
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = '⏳ 제출 중...';
+  try {
+    if(sb){
+      const { error } = await sb.from('writings')
+        .upsert(fields, { onConflict: 'class_num,author_name' });
+      if(error) throw error;
+    } else {
+      let mock = JSON.parse(localStorage.getItem('mock_writings') || '[]');
+      mock = mock.filter(w => !(w.class_num===fields.class_num && w.author_name===fields.author_name));
+      mock.push({ ...fields, id: Date.now() });
+      localStorage.setItem('mock_writings', JSON.stringify(mock));
+    }
+    try{ localStorage.removeItem('draft'); }catch(_){}
+    showToast('✅ 제출 완료! 담벼락으로 이동합니다.');
+    setTimeout(() => switchTab('wall'), 700);
+  } catch(e){
+    console.error('제출 오류:', e);
+    showToast('❗ 제출 실패: ' + (e.message || '네트워크를 확인해 주세요'));
+  } finally {
+    submitting = false;
+    btn.disabled = false; btn.textContent = '✈️ 제출하기';
   }
-  showToast('✅ 제출 완료! 담벼락으로 이동합니다.');
-  setTimeout(()=> switchTab('wall'), 900);
 }
 
 async function loadWall(){
@@ -494,7 +526,8 @@ async function loadWall(){
   if(sb){
     const { data, error } = await sb.from('writings').select('*')
       .eq('class_num', currentUser.classNum).order('created_at', { ascending: false });
-    if(!error && data) writings = data;
+    if(error){ showToast('❗ 불러오기 실패: ' + error.message); }
+    else if(data) writings = data;
   } else {
     const mock = JSON.parse(localStorage.getItem('mock_writings')||'[]');
     writings = mock.filter(w=> w.class_num === currentUser.classNum);
@@ -578,14 +611,16 @@ async function incrementScore(){
       });
       if(error) throw error;
     } catch(e){
-      const { data } = await sb.from('scores').select('*')
-        .eq('student_name', currentUser.name).eq('class_num', currentUser.classNum).single();
-      if(data){
-        await sb.from('scores').update({ score: (data.score||0)+1 })
-          .eq('student_name', currentUser.name).eq('class_num', currentUser.classNum);
-      } else {
-        await sb.from('scores').insert([{ student_name: currentUser.name, class_num: currentUser.classNum, score: 1 }]);
-      }
+      try{
+        const { data } = await sb.from('scores').select('*')
+          .eq('student_name', currentUser.name).eq('class_num', currentUser.classNum).maybeSingle();
+        if(data){
+          await sb.from('scores').update({ score: (data.score||0)+1 })
+            .eq('student_name', currentUser.name).eq('class_num', currentUser.classNum);
+        } else {
+          await sb.from('scores').insert([{ student_name: currentUser.name, class_num: currentUser.classNum, score: 1 }]);
+        }
+      }catch(e2){ console.error('점수 저장 오류:', e2); }
     }
   } else {
     const mock = JSON.parse(localStorage.getItem('mock_scores')||'{}');
@@ -629,6 +664,20 @@ async function loadRankings(){
 document.querySelectorAll('.modal-overlay').forEach(el=>{
   el.addEventListener('click', e=>{ if(e.target===el) el.classList.add('hidden'); });
 });
+
+/* ---------- 자동 로그인 (새로고침 대비) ---------- */
+(function autoLogin(){
+  try{
+    const u = JSON.parse(localStorage.getItem('user') || 'null');
+    if(u && u.name){
+      document.getElementById('login-class').value = u.classNum;
+      document.getElementById('login-name').value = u.name;
+      handleLogin();
+      restoreDraft();
+    }
+  }catch(_){}
+})();
 </script>
 </body>
 </html>
+
