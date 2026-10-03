@@ -423,6 +423,7 @@ async function processOCR(event){
       worker.recognize(blob),
       new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000))
     ]);
+    clearFields();
     const n = parseOCR(res.data.text || '');
     showToast(n ? '📝 인식 완료! 파란 칸을 확인하고 수정해 주세요.'
                 : '🤔 글자를 못 찾았어요. 직접 입력해 주세요.');
@@ -464,6 +465,9 @@ function parseOCR(raw){
   saveDraft();
   return keys.length;
 }
+
+/* ---------- 칸 비우기 ---------- */
+function clearFields(){ FIELD_IDS.forEach(id => document.getElementById(id).value = ''); }
 
 /* ---------- 임시 저장 ---------- */
 function saveDraft(){
@@ -508,6 +512,7 @@ async function submitWriting(){
       localStorage.setItem('mock_writings', JSON.stringify(mock));
     }
     try{ localStorage.removeItem('draft'); }catch(_){}
+    clearFields();
     showToast('✅ 제출 완료! 담벼락으로 이동합니다.');
     setTimeout(() => switchTab('wall'), 700);
   } catch(e){
@@ -672,12 +677,11 @@ document.querySelectorAll('.modal-overlay').forEach(el=>{
     if(u && u.name){
       document.getElementById('login-class').value = u.classNum;
       document.getElementById('login-name').value = u.name;
+      try{ localStorage.removeItem('draft'); }catch(_){}
       handleLogin();
-      restoreDraft();
     }
   }catch(_){}
 })();
 </script>
 </body>
 </html>
-
