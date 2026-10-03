@@ -9,27 +9,13 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
-  --paper:#FFFBF0;
-  --ink:#1a1a2e;
-  --blue:#4F8EF7;
-  --blue-light:#EBF2FF;
-  --yellow:#FFD166;
-  --red:#FF6B6B;
-  --green:#06D6A0;
-  --purple:#9B72CF;
-  --wall-bg:#E8EDF5;
-  --line:#E0E0E0;
-  --r:14px;
-  --shadow:0 4px 16px rgba(0,0,0,0.10);
+  --paper:#FFFBF0; --ink:#1a1a2e; --blue:#4F8EF7; --blue-light:#EBF2FF;
+  --yellow:#FFD166; --red:#FF6B6B; --green:#06D6A0; --purple:#9B72CF;
+  --wall-bg:#E8EDF5; --line:#E0E0E0; --r:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:100%;height:100%;overflow-x:hidden;}
-body{
-  font-family:'Nunito',sans-serif;
-  background:var(--paper);
-  color:var(--ink);
-  -webkit-font-smoothing:antialiased;
-}
+body{font-family:'Nunito',sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;}
 .hidden{display:none!important;}
 .screen{min-height:100vh;display:flex;flex-direction:column;}
 button{font-family:'Nunito',sans-serif;cursor:pointer;border:none;transition:.15s;}
@@ -44,32 +30,24 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .modal-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.45);
-  display:flex;align-items:center;justify-content:center;
-  z-index:200;padding:20px;
+  display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;
 }
 .modal-box{
-  background:#fff;border-radius:20px;
-  width:100%;max-width:460px;max-height:90vh;
-  overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.2);
+  background:#fff;border-radius:20px;width:100%;max-width:460px;
+  max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.2);
 }
 .modal-head{
-  padding:18px 20px 14px;
-  border-bottom:1px solid var(--line);
+  padding:18px 20px 14px;border-bottom:1px solid var(--line);
   display:flex;align-items:center;justify-content:space-between;
 }
 .modal-head h3{font-size:18px;font-weight:800;}
 .modal-close{
-  width:30px;height:30px;border-radius:50%;
-  background:#f0f0f0;color:#666;font-size:16px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:50%;background:#f0f0f0;color:#666;
+  font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;
 }
 .modal-body{padding:20px;}
 .modal-foot{padding:12px 20px 18px;display:flex;gap:10px;}
-.btn{
-  padding:12px 20px;border-radius:999px;
-  font-size:15px;font-weight:800;
-  display:inline-flex;align-items:center;gap:6px;
-}
+.btn{padding:12px 20px;border-radius:999px;font-size:15px;font-weight:800;display:inline-flex;align-items:center;gap:6px;}
 .btn-primary{background:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(79,142,247,.35);}
 .btn-danger{background:var(--red);color:#fff;}
 .btn-ghost{background:#f4f4f4;color:var(--ink);}
@@ -79,117 +57,77 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
 .field label{display:block;font-size:13px;font-weight:700;color:#666;margin-bottom:6px;}
 .field input,.field select{
   width:100%;border:2px solid var(--line);border-radius:10px;
-  padding:12px 14px;font-size:15px;background:#fff;
-  transition:.15s;
+  padding:12px 14px;font-size:15px;background:#fff;transition:.15s;
 }
 .field input:focus,.field select:focus{outline:none;border-color:var(--blue);}
 #screen-login{
-  align-items:center;justify-content:center;
-  padding:24px;
+  align-items:center;justify-content:center;padding:24px;
   background:linear-gradient(145deg,#EBF2FF 0%,#FFFBF0 60%,#FFF5D7 100%);
 }
 .login-card{
-  background:#fff;border-radius:24px;
-  padding:36px 28px;width:100%;max-width:400px;
-  box-shadow:0 12px 40px rgba(79,142,247,.15);
-  border:2px solid #e0eaff;
+  background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:400px;
+  box-shadow:0 12px 40px rgba(79,142,247,.15);border:2px solid #e0eaff;
 }
 .login-logo{text-align:center;margin-bottom:24px;}
 .login-logo .emoji{font-size:52px;display:block;margin-bottom:8px;}
 .login-logo h1{font-size:22px;font-weight:900;color:var(--blue);}
 .login-logo p{font-size:13px;color:#888;margin-top:4px;}
 #main-header{
-  background:#fff;
-  border-bottom:2px solid var(--blue-light);
-  padding:12px 16px;
+  background:#fff;border-bottom:2px solid var(--blue-light);padding:12px 16px;
   display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:50;
-  box-shadow:0 2px 8px rgba(0,0,0,.06);
+  position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.06);
 }
 .header-user{font-size:13px;font-weight:700;color:#666;}
 .header-user b{color:var(--blue);}
 .header-tabs{display:flex;gap:6px;}
-.tab-btn{
-  padding:8px 14px;border-radius:999px;
-  font-size:13px;font-weight:800;
-  background:#f0f4ff;color:#6b7faa;
-}
+.tab-btn{padding:8px 14px;border-radius:999px;font-size:13px;font-weight:800;background:#f0f4ff;color:#6b7faa;}
 .tab-btn.active{background:var(--blue);color:#fff;box-shadow:0 3px 8px rgba(79,142,247,.3);}
-.ranking-btn{
-  padding:8px 12px;border-radius:999px;
-  font-size:13px;font-weight:800;
-  background:#f5f0ff;color:var(--purple);
-}
+.ranking-btn{padding:8px 12px;border-radius:999px;font-size:13px;font-weight:800;background:#f5f0ff;color:var(--purple);}
 #screen-write{flex:1;padding:16px;max-width:720px;margin:0 auto;width:100%;}
-.section-title{
-  font-size:18px;font-weight:900;margin-bottom:14px;
-  display:flex;align-items:center;gap:8px;
-}
+.section-title{font-size:18px;font-weight:900;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 .ocr-zone{
-  border:2.5px dashed #b3c8ff;border-radius:14px;
-  background:var(--blue-light);padding:18px;
-  text-align:center;margin-bottom:18px;
+  border:2.5px dashed #b3c8ff;border-radius:14px;background:var(--blue-light);
+  padding:18px;text-align:center;margin-bottom:18px;
 }
 .ocr-zone p{font-size:13px;color:#6b7faa;margin-bottom:10px;line-height:1.5;}
 .ocr-label{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--blue);color:#fff;
-  padding:10px 18px;border-radius:999px;
-  font-size:14px;font-weight:800;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;
+  padding:10px 18px;border-radius:999px;font-size:14px;font-weight:800;cursor:pointer;
 }
-.ocr-status{
-  margin-top:10px;font-size:13px;font-weight:700;color:var(--blue);
-}
-.worksheet{
-  background:#fff;border:2px solid #e0eaff;border-radius:16px;
-  padding:20px;
-}
+.ocr-status{margin-top:10px;font-size:13px;font-weight:700;color:var(--blue);}
+.worksheet{background:#fff;border:2px solid #e0eaff;border-radius:16px;padding:20px;}
 .ws-row{
   display:flex;flex-wrap:wrap;align-items:center;gap:6px;
-  padding:10px 0;border-bottom:1px dashed #e8eef8;
-  font-size:16px;font-weight:700;
+  padding:10px 0;border-bottom:1px dashed #e8eef8;font-size:16px;font-weight:700;
 }
 .ws-row:last-child{border-bottom:none;}
-.ws-fixed{
-  background:#f5f5f5;border-radius:8px;padding:8px 14px;
-  font-size:16px;font-weight:800;color:#999;
-  border:1.5px solid #e0e0e0;
-  white-space:nowrap;
-}
 .ws-secret{
   background:#FFF5D7;color:var(--blue);font-weight:900;
   border:1.5px solid var(--yellow);border-radius:8px;
   padding:6px 14px;display:flex;align-items:center;gap:4px;
 }
 .ws-input{
-  border:none;border-bottom:2.5px solid var(--blue);
-  background:transparent;color:var(--blue);
-  font-size:16px;font-weight:800;
-  padding:6px 8px;text-align:center;
-  min-width:80px;
+  border:none;border-bottom:2.5px solid var(--blue);background:transparent;
+  color:var(--blue);font-size:16px;font-weight:800;padding:6px 8px;
+  text-align:center;min-width:80px;
 }
 .ws-input:focus{outline:none;border-bottom-color:#2563eb;}
 .ws-input.wide{min-width:160px;}
 .ws-dot{font-weight:900;color:#333;}
 #screen-wall{flex:1;background:var(--wall-bg);}
 .wall-inner{max-width:960px;margin:0 auto;padding:16px;}
-.wall-topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:14px;
-}
+.wall-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .wall-topbar h2{font-size:18px;font-weight:900;}
 .refresh-btn{
-  background:#fff;border:1.5px solid var(--line);
-  border-radius:999px;padding:7px 14px;
-  font-size:13px;font-weight:700;color:#555;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 14px;
+  font-size:13px;font-weight:700;color:#555;box-shadow:0 2px 6px rgba(0,0,0,.06);
 }
 .wall-grid{columns:2;column-gap:14px;}
 @media(max-width:480px){.wall-grid{columns:1;}}
 .wall-card{
-  break-inside:avoid;margin-bottom:14px;border-radius:16px;
-  padding:16px 16px 14px;box-shadow:0 4px 14px rgba(0,0,0,.09);
-  cursor:pointer;position:relative;border-top:4px solid transparent;transition:.15s;
+  break-inside:avoid;margin-bottom:14px;border-radius:16px;padding:16px 16px 14px;
+  box-shadow:0 4px 14px rgba(0,0,0,.09);cursor:pointer;position:relative;
+  border-top:4px solid transparent;transition:.15s;
 }
 .wall-card:active{transform:scale(.98);}
 .wall-card.yellow{background:#FFFDE7;border-top-color:#FFD166;}
@@ -206,46 +144,32 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
 .wall-empty{text-align:center;padding:60px 20px;color:#aaa;}
 .wall-empty .icon{font-size:42px;display:block;margin-bottom:10px;}
 .guess-chances{display:flex;justify-content:center;gap:8px;margin-bottom:18px;}
-.chance-dot{
-  width:14px;height:14px;border-radius:50%;background:var(--yellow);
-  border:2px solid #ccc;transition:.2s;
-}
+.chance-dot{width:14px;height:14px;border-radius:50%;background:var(--yellow);border:2px solid #ccc;transition:.2s;}
 .chance-dot.used{background:#ddd;border-color:#ccc;}
 .guess-input{
   width:100%;border:2.5px solid var(--blue);border-radius:12px;
   padding:14px;font-size:18px;font-weight:700;text-align:center;margin-bottom:12px;
 }
 .guess-input:focus{outline:none;}
-.guess-result{
-  text-align:center;padding:14px;border-radius:12px;
-  font-size:15px;font-weight:800;margin-top:10px;
-}
+.guess-result{text-align:center;padding:14px;border-radius:12px;font-size:15px;font-weight:800;margin-top:10px;}
 .guess-result.correct{background:#E8F5E9;color:#2e7d32;}
 .guess-result.wrong{background:#FFF3E0;color:#e65100;}
 .guess-result.fail{background:#FFEBEE;color:#c62828;}
 .rank-row{
   display:flex;align-items:center;justify-content:space-between;
-  padding:11px 14px;border-radius:12px;
-  background:#f8f4ff;margin-bottom:8px;border:1.5px solid #ede0ff;
+  padding:11px 14px;border-radius:12px;background:#f8f4ff;margin-bottom:8px;border:1.5px solid #ede0ff;
 }
 .rank-left{display:flex;align-items:center;gap:10px;}
 .rank-pos{font-size:18px;font-weight:900;color:var(--purple);min-width:36px;}
 .rank-name{font-size:15px;font-weight:800;}
-.rank-score{
-  background:var(--purple);color:#fff;
-  font-size:13px;font-weight:800;padding:4px 12px;border-radius:999px;
-}
-@media(min-width:600px){
-  .wall-grid{columns:3;}
-  #screen-write{padding:20px 28px;}
-}
+.rank-score{background:var(--purple);color:#fff;font-size:13px;font-weight:800;padding:4px 12px;border-radius:999px;}
+@media(min-width:600px){.wall-grid{columns:3;} #screen-write{padding:20px 28px;}}
 </style>
 </head>
 <body>
 
 <div id="toast"></div>
 
-<!-- 1. 로그인 화면 -->
 <div id="screen-login" class="screen">
   <div class="login-card">
     <div class="login-logo">
@@ -266,6 +190,8 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
         <option value="4">4반</option>
         <option value="5">5반</option>
         <option value="6">6반</option>
+        <option value="7">7반</option>
+        <option value="8">8반</option>
       </select>
     </div>
     <div class="field">
@@ -278,7 +204,6 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
   </div>
 </div>
 
-<!-- 메인 헤더 -->
 <header id="main-header" class="hidden">
   <div class="header-user">5학년 <b id="hdr-class">-</b>반 · <b id="hdr-name">-</b></div>
   <div class="header-tabs">
@@ -288,7 +213,6 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
   </div>
 </header>
 
-<!-- 2. 글쓰기 화면 -->
 <div id="screen-write" class="screen hidden">
   <div id="screen-write-inner">
     <div class="section-title">✏️ 내 소개글 작성하기</div>
@@ -337,14 +261,12 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
         <span>How about you?</span>
       </div>
     </div>
-    <button class="btn btn-primary btn-full" onclick="submitWriting()"
-      style="margin-top:18px;font-size:16px;padding:15px;">
+    <button class="btn btn-primary btn-full" onclick="submitWriting()" style="margin-top:18px;font-size:16px;padding:15px;">
       ✈️ 제출하기
     </button>
   </div>
 </div>
 
-<!-- 3. 담벼락 화면 -->
 <div id="screen-wall" class="screen hidden">
   <div class="wall-inner">
     <div class="wall-topbar">
@@ -360,7 +282,6 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
   </div>
 </div>
 
-<!-- 이름 맞히기 모달 -->
 <div id="modal-guess" class="modal-overlay hidden">
   <div class="modal-box">
     <div class="modal-head">
@@ -386,7 +307,6 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
   </div>
 </div>
 
-<!-- 랭킹 모달 -->
 <div id="modal-ranking" class="modal-overlay hidden">
   <div class="modal-box">
     <div class="modal-head">
@@ -410,17 +330,13 @@ const SUPABASE_URL = 'https://iawjmzjzcbpokwzfmjcc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_YH1leZkhUOrLswVSlpS8NQ_T-95a_0O';
 
 let sb = null;
-try {
-  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} catch(e) {
-  console.warn('Supabase 연결 실패, 로컬 모드로 동작합니다.', e);
-}
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+catch(e) { console.warn('Supabase 연결 실패, 로컬 모드로 동작합니다.', e); }
 
 let currentUser = { classNum: '1', name: '' };
 let guessTarget = { authorName: '', writingId: null };
 let guessChancesLeft = 3;
 let guessAlreadyCorrect = false;
-
 const CARD_COLORS = ['yellow','blue','green','pink'];
 const PINS = ['📌','📎','🖇️','🔖'];
 
@@ -538,20 +454,18 @@ async function submitWriting(){
   const fields = {
     class_num: currentUser.classNum,
     author_name: currentUser.name,
-    f_subject:   document.getElementById('f-subject').value.trim(),
+    f_subject: document.getElementById('f-subject').value.trim(),
     f_subject_val: document.getElementById('f-subject-val').value.trim(),
-    f_like:      document.getElementById('f-like').value.trim(),
-    f_color:     document.getElementById('f-color').value.trim(),
+    f_like: document.getElementById('f-like').value.trim(),
+    f_color: document.getElementById('f-color').value.trim(),
     f_color_val: document.getElementById('f-color-val').value.trim(),
-    f_food:      document.getElementById('f-food').value.trim(),
-    f_food_val:  document.getElementById('f-food-val').value.trim(),
+    f_food: document.getElementById('f-food').value.trim(),
+    f_food_val: document.getElementById('f-food-val').value.trim(),
   };
   const filled = [fields.f_subject_val, fields.f_like, fields.f_color_val, fields.f_food_val].some(v=>v);
   if(!filled){ showToast('내용을 하나 이상 입력해 주세요!'); return; }
   if(sb){
-    const { error } = await sb
-      .from('writings')
-      .upsert(fields, { onConflict: 'class_num,author_name' });
+    const { error } = await sb.from('writings').upsert(fields, { onConflict: 'class_num,author_name' });
     if(error){ showToast('저장 중 오류: ' + error.message); return; }
   } else {
     let mock = JSON.parse(localStorage.getItem('mock_writings')||'[]');
@@ -568,10 +482,8 @@ async function loadWall(){
   grid.innerHTML = '<div class="wall-empty"><span class="icon">⏳</span>불러오는 중...</div>';
   let writings = [];
   if(sb){
-    const { data, error } = await sb
-      .from('writings').select('*')
-      .eq('class_num', currentUser.classNum)
-      .order('created_at', { ascending: false });
+    const { data, error } = await sb.from('writings').select('*')
+      .eq('class_num', currentUser.classNum).order('created_at', { ascending: false });
     if(!error && data) writings = data;
   } else {
     const mock = JSON.parse(localStorage.getItem('mock_writings')||'[]');
@@ -652,8 +564,7 @@ async function incrementScore(){
   if(sb){
     try {
       const { error } = await sb.rpc('increment_score', {
-        p_student_name: currentUser.name,
-        p_class_num: currentUser.classNum
+        p_student_name: currentUser.name, p_class_num: currentUser.classNum
       });
       if(error) throw error;
     } catch(e){
@@ -663,11 +574,7 @@ async function incrementScore(){
         await sb.from('scores').update({ score: (data.score||0)+1 })
           .eq('student_name', currentUser.name).eq('class_num', currentUser.classNum);
       } else {
-        await sb.from('scores').insert([{
-          student_name: currentUser.name,
-          class_num: currentUser.classNum,
-          score: 1
-        }]);
+        await sb.from('scores').insert([{ student_name: currentUser.name, class_num: currentUser.classNum, score: 1 }]);
       }
     }
   } else {
@@ -677,10 +584,7 @@ async function incrementScore(){
   }
 }
 
-function openRankingModal(){
-  openModal('modal-ranking');
-  loadRankings();
-}
+function openRankingModal(){ openModal('modal-ranking'); loadRankings(); }
 
 async function loadRankings(){
   const list = document.getElementById('ranking-list');
@@ -688,15 +592,12 @@ async function loadRankings(){
   let ranks = [];
   if(sb){
     const { data } = await sb.from('scores')
-      .select('student_name, score')
-      .eq('class_num', currentUser.classNum)
-      .order('score', { ascending: false })
-      .limit(15);
+      .select('student_name, score').eq('class_num', currentUser.classNum)
+      .order('score', { ascending: false }).limit(15);
     if(data) ranks = data;
   } else {
     const mock = JSON.parse(localStorage.getItem('mock_scores')||'{}');
-    ranks = Object.keys(mock)
-      .map(n=>({ student_name:n, score: mock[n] }))
+    ranks = Object.keys(mock).map(n=>({ student_name:n, score: mock[n] }))
       .sort((a,b)=>b.score-a.score).slice(0,15);
   }
   if(ranks.length===0){
