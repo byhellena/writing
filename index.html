@@ -436,6 +436,48 @@ function resizeImage(file, maxSide = 1400){
   });
 }
 
+/* ---------- AI 인식 (Supabase Edge Function: read-worksheet) ---------- */
+function fileToJpegBase64(file, maxSide = 1280){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.8).split(',')[1]);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('img')); };
+    img.src = url;
+  });
+}
+async function readWithAI(file){
+  if(!sb) throw new Error('no supabase');
+  const image = await fileToJpegBase64(file);
+  const call = sb.functions.invoke('read-worksheet', { body: { image } });
+  const { data, error } = await Promise.race([
+    call, new Promise((_, rej) => setTimeout(() => rej(new Error('ai timeout')), 30000))
+  ]);
+  if(error) throw error;
+  if(!data || data.error) throw new Error((data && data.error) || 'empty');
+  return data;
+}
+function applyAIFields(d){
+  clearFields();
+  let n = 0;
+  FIELD_IDS.forEach(id => {
+    const v = String(d[id.replace(/-/g,'_')] || '').trim();
+    if(v){
+      const el = document.getElementById(id);
+      el.value = v.slice(0, el.maxLength > 0 ? el.maxLength : 99); n++;
+    }
+  });
+  saveDraft();
+  return n;
+}
+
 /* ---------- OCR ---------- */
 let ocrBusy = false;
 async function processOCR(event){
@@ -448,14 +490,22 @@ async function processOCR(event){
   status.textContent = '🔍 손글씨 인식 중... (최대 45초)';
   let worker = null;
   try {
-    const blob = await resizeImage(file);
-    worker = await Tesseract.createWorker('eng');
-    const res = await Promise.race([
-      worker.recognize(blob),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000))
-    ]);
-    clearFields();
-    const n = parseOCR(res.data.text || '');
+    let n = 0;
+    try {
+      status.textContent = '🤖 AI가 글씨를 읽는 중...';
+      n = applyAIFields(await readWithAI(file));
+    } catch(aiErr){
+      console.warn('AI 인식을 못 써서 기본 인식으로 대체:', aiErr);
+      status.textContent = '🔍 손글씨 인식 중... (최대 45초)';
+      const blob = await resizeImage(file);
+      worker = await Tesseract.createWorker('eng');
+      const res = await Promise.race([
+        worker.recognize(blob),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000))
+      ]);
+      clearFields();
+      n = parseOCR(res.data.text || '');
+    }
     showToast(n ? '📝 인식 완료! 파란 칸을 확인하고 수정해 주세요.'
                 : '🤔 글자를 못 찾았어요. 직접 입력해 주세요.');
   } catch(e){
@@ -471,21 +521,27 @@ async function processOCR(event){
 
 function parseOCR(raw){
   const out = {};
-  const clean = s => s.replace(/[|_~^<>\[\]{}]/g,'').replace(/\.+\s*$/,'').trim();
+  const IS = /\s+(?:j?is|[l1I]s|i5)\s+/i;          // OCR이 is를 jis, ls 등으로 읽는 경우까지 허용
+  const clean = s => s.replace(/[|_~^<>\[\]{}"]/g,'').replace(/\s+/g,' ').replace(/^[\s.,:;-]+|[\s.,:;-]+$/g,'');
   for(const l of raw.split('\n')){
-    const line = l.replace(/[|_~^<>\[\]{}]/g,'').trim();
-    if(!line || /hello|name is|how about/i.test(line)) continue;
+    let line = l.replace(/[|_~^<>\[\]{}]/g,' ').replace(/\s+/g,' ').trim();
+    line = line.replace(/\.[\s\S]*$/,'').trim();      // 첫 마침표 뒤의 쓰레기 글자 제거
+    if(!line || /hello|name\s*is|how about/i.test(line)) continue;
     let m;
     if((m = line.match(/^i\s+like\s+(.+)/i))){ out['f-like'] = clean(m[1]); continue; }
-    if((m = line.match(/^my\s+favou?rite\s+(.+?)\s+is\s+(.+)/i))){
-      const cat = clean(m[1]), val = clean(m[2]);
-      if(/food/i.test(cat)){ out['f-food']=cat; out['f-food-val']=val; }
-      else if(/colou?r/i.test(cat) || out['f-subject']){ out['f-color']=cat; out['f-color-val']=val; }
-      else { out['f-subject']=cat; out['f-subject-val']=val; }
+    if((m = line.match(/^my\s+favou?rite\s+(.+)/i))){
+      const parts = m[1].split(IS);
+      if(parts.length >= 2){
+        const cat = clean(parts[0]), val = clean(parts.slice(1).join(' is '));
+        if(/food/i.test(cat)){ out['f-food']='favorite '+cat.replace(/^favou?rite\s+/i,''); out['f-food-val']=val; }
+        else if(/colou?r/i.test(cat) || out['f-subject']){ out['f-color']=cat; out['f-color-val']=val; }
+        else { out['f-subject']=cat; out['f-subject-val']=val; }
+      }
       continue;
     }
-    if((m = line.match(/^my\s+(.+?)\s+is\s+(.+)/i))){
-      out['f-food'] = clean(m[1]); out['f-food-val'] = clean(m[2]);
+    if((m = line.match(/^my\s+(.+)/i))){
+      const parts = m[1].split(IS);
+      if(parts.length >= 2){ out['f-food'] = clean(parts[0]); out['f-food-val'] = clean(parts.slice(1).join(' is ')); }
     }
   }
   const keys = Object.keys(out).filter(k => out[k]);
