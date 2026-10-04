@@ -704,6 +704,7 @@ async function loadWall(){
     const mock = JSON.parse(localStorage.getItem('mock_writings')||'[]');
     writings = mock.filter(w=> w.class_num === currentUser.classNum);
   }
+  await loadSolved();
   if(writings.length===0){
     grid.innerHTML = '<div class="wall-empty"><span class="icon">📭</span>아직 글이 없어요.<br>첫 번째로 글을 써봐요!</div>';
     return;
@@ -732,15 +733,17 @@ async function loadWall(){
              <button class="btn btn-primary btn-sm" onclick="openEditModal('${w.id}')">✏️ 수정</button>
              <button class="btn btn-danger btn-sm" onclick="deleteWriting('${w.id}')">🗑️ 삭제</button>
            </div>`
-        : `<div class="card-hint">👆 탭해서 누구 글인지 맞혀봐!</div>`}
+        : solvedSet.has(String(w.id))
+          ? `<div class="card-hint">✅ 맞힌 글이에요! 글쓴이: <b>${esc(w.author_name)}</b></div>`
+          : `<div class="card-hint">👆 탭해서 누구 글인지 맞혀봐!</div>`}
     `;
-    if(!isOwn){ card.onclick = ()=> openGuessModal(w.author_name, w.id); }
+    if(!isOwn && !solvedSet.has(String(w.id))){ card.onclick = ()=> openGuessModal(w.author_name, w.id, card); }
     grid.appendChild(card);
   });
 }
 
-function openGuessModal(authorName, writingId){
-  guessTarget = { authorName, writingId };
+function openGuessModal(authorName, writingId, cardEl){
+  guessTarget = { authorName, writingId, cardEl };
   guessChancesLeft = 3;
   guessAlreadyCorrect = false;
   document.getElementById('guess-input').value = '';
@@ -758,6 +761,23 @@ function updateChanceDots(){
     guessChancesLeft > 0 ? `남은 기회: ${guessChancesLeft}번` : '';
 }
 
+/* ---------- 이미 맞힌 글 기록 (점수 중복 방지) ---------- */
+let solvedSet = new Set();
+function solvedKey(){ return 'solved:' + currentUser.classNum + ':' + currentUser.name; }
+function getLocalSolved(){ try{ return JSON.parse(localStorage.getItem(solvedKey()) || '[]').map(String); }catch(_){ return []; } }
+function addLocalSolved(id){
+  const a = getLocalSolved();
+  if(!a.includes(String(id))){ a.push(String(id)); try{ localStorage.setItem(solvedKey(), JSON.stringify(a)); }catch(_){} }
+}
+async function loadSolved(){
+  solvedSet = new Set(getLocalSolved());
+  if(!sb) return;
+  const { data, error } = await sb.from('guesses').select('writing_id')
+    .eq('class_num', currentUser.classNum).eq('student_name', currentUser.name);
+  if(error){ console.warn('guesses 불러오기 실패:', error.message); return; }
+  (data || []).forEach(r => solvedSet.add(String(r.writing_id)));
+}
+
 async function submitGuess(){
   if(guessAlreadyCorrect) return;
   if(guessChancesLeft <= 0) return;
@@ -766,10 +786,31 @@ async function submitGuess(){
   const resultEl = document.getElementById('guess-result');
   if(input === guessTarget.authorName){
     guessAlreadyCorrect = true;
-    resultEl.innerHTML = `<div class="guess-result correct">🎉 정답! 이 글의 주인은 <b>${esc(guessTarget.authorName)}</b>이에요! (+1점)</div>`;
     guessChancesLeft = 0;
     updateChanceDots();
-    await incrementScore();
+    const id = String(guessTarget.writingId);
+    let fresh = !solvedSet.has(id);
+    if(fresh && sb){
+      const { error } = await sb.from('guesses')
+        .insert([{ class_num: currentUser.classNum, student_name: currentUser.name, writing_id: id }]);
+      if(error){
+        if(error.code === '23505') fresh = false;      // 이미 맞힌 글
+        else console.warn('guesses 저장 실패:', error.message);
+      }
+    }
+    solvedSet.add(id); addLocalSolved(id);
+    if(fresh){
+      resultEl.innerHTML = `<div class="guess-result correct">🎉 정답! 이 글의 주인은 <b>${esc(guessTarget.authorName)}</b>이에요! (+1점)</div>`;
+      await incrementScore();
+    } else {
+      resultEl.innerHTML = `<div class="guess-result correct">✅ 이미 맞힌 글이에요. 점수는 한 번만 올라가요!</div>`;
+    }
+    const c = guessTarget.cardEl;
+    if(c){
+      c.onclick = null;
+      const h = c.querySelector('.card-hint');
+      if(h) h.innerHTML = `✅ 맞힌 글이에요! 글쓴이: <b>${esc(guessTarget.authorName)}</b>`;
+    }
   } else {
     guessChancesLeft--;
     updateChanceDots();
