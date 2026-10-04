@@ -232,6 +232,7 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
         <input type="file" accept="image/*" class="hidden" onchange="processOCR(event)">
       </label>
       <div id="ocr-status" class="ocr-status hidden">🔍 손글씨 인식 중... 잠깐만요!</div>
+      <div id="ocr-debug" class="hidden" style="margin-top:8px;font-size:11px;color:#999;word-break:break-all;text-align:left;"></div>
     </div>
     <div class="worksheet">
       <div class="ws-row">
@@ -478,6 +479,22 @@ function applyAIFields(d){
   return n;
 }
 
+function dbg(msg){
+  const d = document.getElementById('ocr-debug');
+  if(!msg){ d.classList.add('hidden'); d.textContent=''; return; }
+  d.classList.remove('hidden'); d.textContent = (d.textContent ? d.textContent + '\n' : '') + msg;
+  d.style.whiteSpace = 'pre-wrap';
+}
+async function errText(e){
+  try{
+    if(e && e.context && typeof e.context.text === 'function'){
+      const t = await e.context.text();
+      return (e.context.status ? e.context.status + ' ' : '') + t.slice(0,200);
+    }
+  }catch(_){}
+  return (e && e.message) ? e.message : String(e);
+}
+
 /* ---------- OCR ---------- */
 let ocrBusy = false;
 async function processOCR(event){
@@ -488,14 +505,18 @@ async function processOCR(event){
   const status = document.getElementById('ocr-status');
   status.classList.remove('hidden');
   status.textContent = '🔍 손글씨 인식 중... (최대 45초)';
+  dbg('');
   let worker = null;
   try {
     let n = 0;
     try {
       status.textContent = '🤖 AI가 글씨를 읽는 중...';
-      n = applyAIFields(await readWithAI(file));
+      const d = await readWithAI(file);
+      n = applyAIFields(d);
+      if(!n) dbg('AI 응답이 비어 있어요: ' + JSON.stringify(d).slice(0,300));
     } catch(aiErr){
       console.warn('AI 인식을 못 써서 기본 인식으로 대체:', aiErr);
+      dbg('AI 오류: ' + await errText(aiErr));
       status.textContent = '🔍 손글씨 인식 중... (최대 45초)';
       const blob = await resizeImage(file);
       worker = await Tesseract.createWorker('eng');
@@ -510,6 +531,7 @@ async function processOCR(event){
                 : '🤔 글자를 못 찾았어요. 직접 입력해 주세요.');
   } catch(e){
     console.error('OCR 오류:', e);
+    dbg('기본 인식 오류: ' + (e && e.message ? e.message : e));
     showToast('📷 인식에 실패했어요. 칸을 직접 입력해 주세요.');
   } finally {
     if(worker){ try{ await worker.terminate(); }catch(_){} }
