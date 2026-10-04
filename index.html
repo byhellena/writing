@@ -201,7 +201,7 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
     </div>
     <div class="field">
       <label>이름 (3글자)</label>
-      <input type="text" autocomplete="off" id="login-name" placeholder="예: 김민수" maxlength="6">
+      <input type="text" autocomplete="off" id="login-name" placeholder="예: 김민수" maxlength="6" onkeydown="if(event.key==='Enter')handleLogin()">
     </div>
     <button class="btn btn-primary btn-full" onclick="handleLogin()" style="font-size:17px;padding:15px;">
       시작하기 🚀
@@ -317,6 +317,20 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
   </div>
 </div>
 
+<div id="modal-confirm" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-head"><h3>🙋 내 이름이 맞나요?</h3></div>
+    <div class="modal-body" style="text-align:center;">
+      <div id="confirm-text" style="font-size:16px;line-height:1.8;margin-bottom:10px;"></div>
+      <p style="font-size:12px;color:#888;line-height:1.5;">이름이 다르면 글과 점수가 따로 저장돼요.<br>한 글자라도 틀리지 않았는지 확인해 주세요!</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="retypeName()">✏️ 다시 쓰기</button>
+      <button class="btn btn-primary" style="margin-left:auto;" onclick="confirmLogin()">맞아요! 👍</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-edit" class="modal-overlay hidden">
   <div class="modal-box">
     <div class="modal-head">
@@ -352,8 +366,15 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
       <button class="modal-close" onclick="closeModal('modal-ranking')">✕</button>
     </div>
     <div class="modal-body">
+      <div id="rank-title" style="text-align:center;font-size:14px;font-weight:800;color:var(--purple);margin-bottom:10px;"></div>
       <div id="ranking-list">
         <div style="text-align:center;color:#aaa;padding:20px;">불러오는 중...</div>
+      </div>
+    </div>
+    <div style="padding:0 20px 4px;">
+      <div class="field" style="margin-bottom:8px;">
+        <label>🔎 다른 반 랭킹 보기</label>
+        <select id="rank-class" onchange="loadRankings()"><option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option><option value="7">7반</option><option value="8">8반</option></select>
       </div>
     </div>
     <div class="modal-foot">
@@ -388,10 +409,26 @@ function showToast(msg){
 function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
 function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
 
+let pendingLogin = null;
 function handleLogin(){
   const cls = document.getElementById('login-class').value;
-  const name = document.getElementById('login-name').value.trim();
+  const name = document.getElementById('login-name').value.replace(/\s+/g,'');
   if(!name){ showToast('이름을 입력해 주세요!'); return; }
+  pendingLogin = { cls, name };
+  document.getElementById('confirm-text').innerHTML =
+    `5학년 <b>${esc(cls)}반</b><br><span style="font-size:30px;font-weight:900;color:var(--blue);">${esc(name)}</span>`;
+  openModal('modal-confirm');
+}
+function retypeName(){
+  closeModal('modal-confirm');
+  const el = document.getElementById('login-name');
+  el.focus(); el.select();
+}
+function confirmLogin(){
+  closeModal('modal-confirm');
+  if(pendingLogin) finishLogin(pendingLogin.cls, pendingLogin.name);
+}
+function finishLogin(cls, name){
   currentUser = { classNum: cls, name };
   document.getElementById('hdr-class').textContent = cls;
   document.getElementById('hdr-name').textContent = name;
@@ -734,10 +771,13 @@ async function loadWall(){
              <button class="btn btn-danger btn-sm" onclick="deleteWriting('${w.id}')">🗑️ 삭제</button>
            </div>`
         : solvedSet.has(String(w.id))
-          ? `<div class="card-hint">✅ 맞힌 글이에요! 글쓴이: <b>${esc(w.author_name)}</b></div>`
+          ? `<div class="card-hint">${SOLVED_HINT}</div>`
           : `<div class="card-hint">👆 탭해서 누구 글인지 맞혀봐!</div>`}
     `;
-    if(!isOwn && !solvedSet.has(String(w.id))){ card.onclick = ()=> openGuessModal(w.author_name, w.id, card); }
+    if(!isOwn){
+      if(solvedSet.has(String(w.id))) card.onclick = ()=> toggleSolvedHint(card, w.author_name);
+      else card.onclick = ()=> openGuessModal(w.author_name, w.id, card);
+    }
     grid.appendChild(card);
   });
 }
@@ -759,6 +799,20 @@ function updateChanceDots(){
   }
   document.getElementById('guess-remaining').textContent =
     guessChancesLeft > 0 ? `남은 기회: ${guessChancesLeft}번` : '';
+}
+
+/* ---------- 맞힌 글: 탭하면 정답이 잠깐 보이고 자동으로 숨김 ---------- */
+const SOLVED_HINT = '✅ 이미 맞힌 문제예요 · 👆 탭하면 정답 보기';
+function toggleSolvedHint(card, name){
+  const h = card.querySelector('.card-hint');
+  if(!h) return;
+  clearTimeout(card._hideT);
+  if(card.dataset.shown === '1'){
+    card.dataset.shown = '0'; h.textContent = SOLVED_HINT; return;
+  }
+  card.dataset.shown = '1';
+  h.innerHTML = `🙋 정답: <b>${esc(name)}</b>`;
+  card._hideT = setTimeout(()=>{ card.dataset.shown = '0'; h.textContent = SOLVED_HINT; }, 3000);
 }
 
 /* ---------- 이미 맞힌 글 기록 (점수 중복 방지) ---------- */
@@ -807,9 +861,10 @@ async function submitGuess(){
     }
     const c = guessTarget.cardEl;
     if(c){
-      c.onclick = null;
+      const nm = guessTarget.authorName;
+      c.onclick = ()=> toggleSolvedHint(c, nm);
       const h = c.querySelector('.card-hint');
-      if(h) h.innerHTML = `✅ 맞힌 글이에요! 글쓴이: <b>${esc(guessTarget.authorName)}</b>`;
+      if(h) h.textContent = SOLVED_HINT;
     }
   } else {
     guessChancesLeft--;
@@ -849,15 +904,22 @@ async function incrementScore(){
   }
 }
 
-function openRankingModal(){ openModal('modal-ranking'); loadRankings(); }
+function openRankingModal(){
+  document.getElementById('rank-class').value = currentUser.classNum;
+  openModal('modal-ranking');
+  loadRankings();
+}
 
 async function loadRankings(){
+  const rc = document.getElementById('rank-class').value;
+  document.getElementById('rank-title').textContent =
+    rc === currentUser.classNum ? `🏫 우리 반(${rc}반) 랭킹` : `🏫 ${rc}반 랭킹`;
   const list = document.getElementById('ranking-list');
   list.innerHTML = '<div style="text-align:center;color:#aaa;padding:16px;">불러오는 중...</div>';
   let ranks = [];
   if(sb){
     const { data } = await sb.from('scores')
-      .select('student_name, score').eq('class_num', currentUser.classNum)
+      .select('student_name, score').eq('class_num', document.getElementById('rank-class').value)
       .order('score', { ascending: false }).limit(15);
     if(data) ranks = data;
   } else {
