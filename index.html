@@ -928,6 +928,7 @@ async function loadWall(){
     const color = CARD_COLORS[i % CARD_COLORS.length];
     const pin = PINS[i % PINS.length];
     const isOwn = (w.author_name === currentUser.name);
+    const state = solvedSet.has(String(w.id)) ? 'solved' : failedSet.has(String(w.id)) ? 'failed' : 'open';
     const card = document.createElement('div');
     card.className = `wall-card ${color}`;
     card.innerHTML = `
@@ -945,12 +946,12 @@ async function loadWall(){
              <button class="btn btn-primary btn-sm" onclick="openEditModal('${w.id}')">✏️ 수정</button>
              <button class="btn btn-danger btn-sm" onclick="deleteWriting('${w.id}')">🗑️ 삭제</button>
            </div>`
-        : solvedSet.has(String(w.id))
-          ? `<div class="card-hint">${SOLVED_HINT}</div>`
-          : `<div class="card-hint">👆 탭해서 누구 글인지 맞혀봐!</div>`}
+        : state === 'solved' ? `<div class="card-hint">${SOLVED_HINT}</div>`
+        : state === 'failed' ? `<div class="card-hint">${FAILED_HINT}</div>`
+        : `<div class="card-hint">👆 탭해서 누구 글인지 맞혀봐!</div>`}
     `;
     if(!isOwn){
-      if(solvedSet.has(String(w.id))) card.onclick = ()=> toggleSolvedHint(card, w.author_name);
+      if(state !== 'open'){ card._base = state === 'solved' ? SOLVED_HINT : FAILED_HINT; card.onclick = ()=> toggleSolvedHint(card, w.author_name); }
       else card.onclick = ()=> openGuessModal(w.author_name, w.id, card);
     }
     grid.appendChild(card);
@@ -959,7 +960,7 @@ async function loadWall(){
 
 function openGuessModal(authorName, writingId, cardEl){
   guessTarget = { authorName, writingId, cardEl };
-  guessChancesLeft = 3;
+  guessChancesLeft = Math.max(0, 3 - getTries(writingId));
   guessAlreadyCorrect = false;
   document.getElementById('guess-input').value = '';
   document.getElementById('guess-result').innerHTML = '';
@@ -981,13 +982,14 @@ const SOLVED_HINT = '✅ 이미 맞힌 문제예요 · 👆 탭하면 정답 보
 function toggleSolvedHint(card, name){
   const h = card.querySelector('.card-hint');
   if(!h) return;
+  const base = card._base || SOLVED_HINT;
   clearTimeout(card._hideT);
   if(card.dataset.shown === '1'){
-    card.dataset.shown = '0'; h.textContent = SOLVED_HINT; return;
+    card.dataset.shown = '0'; h.textContent = base; return;
   }
   card.dataset.shown = '1';
   h.innerHTML = `🙋 정답: <b>${esc(name)}</b>`;
-  card._hideT = setTimeout(()=>{ card.dataset.shown = '0'; h.textContent = SOLVED_HINT; }, 3000);
+  card._hideT = setTimeout(()=>{ card.dataset.shown = '0'; h.textContent = base; }, 3000);
 }
 
 /* ---------- 이미 맞힌 글 기록 (점수 중복 방지) ---------- */
@@ -998,13 +1000,31 @@ function addLocalSolved(id){
   const a = getLocalSolved();
   if(!a.includes(String(id))){ a.push(String(id)); try{ localStorage.setItem(solvedKey(), JSON.stringify(a)); }catch(_){} }
 }
+let failedSet = new Set();
+const FAILED_HINT = '❌ 기회를 다 썼어요 · 👆 탭하면 정답 보기';
+function triesKey(){ return 'tries:' + currentUser.classNum + ':' + currentUser.name; }
+function getTriesMap(){ try{ return JSON.parse(localStorage.getItem(triesKey()) || '{}'); }catch(_){ return {}; } }
+function getTries(id){ return getTriesMap()[String(id)] || 0; }
+function addTry(id){
+  const o = getTriesMap(); o[String(id)] = (o[String(id)] || 0) + 1;
+  try{ localStorage.setItem(triesKey(), JSON.stringify(o)); }catch(_){}
+}
 async function loadSolved(){
   solvedSet = new Set(getLocalSolved());
-  if(!sb) return;
-  const { data, error } = await sb.from('guesses').select('writing_id')
-    .eq('class_num', currentUser.classNum).eq('student_name', currentUser.name);
-  if(error){ console.warn('guesses 불러오기 실패:', error.message); return; }
-  (data || []).forEach(r => solvedSet.add(String(r.writing_id)));
+  failedSet = new Set();
+  const tm = getTriesMap();
+  Object.keys(tm).forEach(k => { if(tm[k] >= 3) failedSet.add(k); });
+  if(sb){
+    const q = t => sb.from(t).select('writing_id')
+      .eq('class_num', currentUser.classNum).eq('student_name', currentUser.name);
+    const g = await q('guesses');
+    if(g.error) console.warn('guesses 불러오기 실패:', g.error.message);
+    else (g.data || []).forEach(r => solvedSet.add(String(r.writing_id)));
+    const f = await q('failed_guesses');
+    if(f.error) console.warn('failed_guesses 불러오기 실패:', f.error.message);
+    else (f.data || []).forEach(r => failedSet.add(String(r.writing_id)));
+  }
+  solvedSet.forEach(id => failedSet.delete(id));
 }
 
 async function submitGuess(){
@@ -1042,13 +1062,24 @@ async function submitGuess(){
       if(h) h.textContent = SOLVED_HINT;
     }
   } else {
+    addTry(guessTarget.writingId);
     guessChancesLeft--;
     updateChanceDots();
     document.getElementById('guess-input').value = '';
     if(guessChancesLeft > 0){
       resultEl.innerHTML = `<div class="guess-result wrong">❌ 틀렸어요! 다시 도전해봐요.</div>`;
     } else {
-      resultEl.innerHTML = `<div class="guess-result fail">😭 아쉽네요! 정답은 <b>${esc(guessTarget.authorName)}</b>이에요.</div>`;
+      resultEl.innerHTML = `<div class="guess-result fail">😭 아쉽네요! 정답은 <b>${esc(guessTarget.authorName)}</b>이에요.<br><span style="font-size:12px;">이 글은 더 이상 도전할 수 없어요.</span></div>`;
+      const id = String(guessTarget.writingId);
+      failedSet.add(id);
+      if(sb) sb.from('failed_guesses').insert([{ class_num: currentUser.classNum, student_name: currentUser.name, writing_id: id }]).then(()=>{}, ()=>{});
+      const c = guessTarget.cardEl;
+      if(c){
+        const nm = guessTarget.authorName;
+        c._base = FAILED_HINT;
+        c.onclick = ()=> toggleSolvedHint(c, nm);
+        const h = c.querySelector('.card-hint'); if(h) h.textContent = FAILED_HINT;
+      }
     }
   }
 }
@@ -1160,14 +1191,24 @@ async function adminLoad(){
     const d = await adminCall({ action: 'list', class_num: cls });
     adminRows = d.rows || [];
     if(!adminRows.length){ box.innerHTML = '<div class="wall-empty"><span class="icon">📭</span>이 반에는 글이 없어요.</div>'; return; }
-    box.innerHTML = adminRows.map((r,i)=>`
-      <div class="admin-row">
-        <div><div class="nm">${esc(r.author_name)}</div><div class="sub">I like ${esc(r.f_like)}</div></div>
-        <div style="display:flex;gap:6px;">
+    box.innerHTML = '<div class="wall-grid">' + adminRows.map((r,i)=>{
+      const color = CARD_COLORS[i % CARD_COLORS.length], pin = PINS[i % PINS.length];
+      return `<div class="wall-card ${color}" style="cursor:default;">
+        <div class="pin">${pin}</div>
+        <div class="card-text" style="margin-top:4px;">
+          <p>Hello, my name is <b>${esc(r.author_name)}</b>.</p>
+          <p>My favorite ${esc(r.f_subject)} is <b>${esc(r.f_subject_val)}</b>.</p>
+          <p>I like <b>${esc(r.f_like)}</b>.</p>
+          <p>My favorite ${esc(r.f_color)} is <b>${esc(r.f_color_val)}</b>.</p>
+          <p>My ${esc(r.f_food)} is <b>${esc(r.f_food_val)}</b>.</p>
+          <p>How about you?</p>
+        </div>
+        <div class="card-actions">
           <button class="btn btn-ghost btn-sm" onclick="adminRename(${i})">✏️ 이름 수정</button>
           <button class="btn btn-danger btn-sm" onclick="adminDelete(${i})">🗑️ 삭제</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('') + '</div>';
   }catch(e){ box.innerHTML = ''; showToast('❗ ' + e.message); }
 }
 async function adminRename(i){
