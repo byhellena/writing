@@ -30,6 +30,8 @@ h1,h2,.fh{font-family:'Fredoka','Apple SD Gothic Neo',sans-serif}
 .err{color:#dc2626;font-weight:800;background:#fee2e2;border-bottom:3px wavy #dc2626;padding:0 3px;border-radius:4px}
 .sug{background:#fff;border:2px solid #fca5a5;color:#b91c1c;font-weight:700;border-radius:10px;padding:4px 12px;margin:2px 4px 2px 0}
 .sug:active{background:#fee2e2}
+.hb{padding:8px 16px;border-radius:12px;font-weight:700;font-size:15px}
+.chip{background:#eef2ff;color:#4338ca;font-weight:800;padding:1px 8px;border-radius:8px;border-bottom:3px solid #818cf8}
 .bigbtn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.5)}
 .tab{padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;white-space:nowrap;background:#f1f5f9;color:#475569}
 .tab.on{background:#4f46e5;color:#fff}
@@ -89,6 +91,18 @@ h1,h2,.fh{font-family:'Fredoka','Apple SD Gothic Neo',sans-serif}
           <div id="hint" class="absolute inset-0 flex items-center justify-center pointer-events-none" data-html2canvas-ignore>
             <p class="text-sm font-semibold bg-white/85 text-slate-500 px-4 py-1.5 rounded-full">👆 Tap a sticker to add it here!</p></div>
         </div>
+      </div>
+
+      <div id="help" data-html2canvas-ignore class="flex flex-col gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="hBtn" class="hb bg-sky-100 text-sky-700 border border-sky-200">💡 도움자료</button>
+          <button id="tBtn" class="hidden hb bg-slate-800 text-white">🔒 선생님 확인</button>
+          <span id="pwBox" class="hidden flex items-center gap-2">
+            <input id="pw" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="비밀번호" class="blank" style="flex:none;width:8rem;font-size:1rem;text-align:center">
+            <button id="pwOk" class="hb bg-indigo-600 text-white">확인</button>
+          </span>
+        </div>
+        <div id="hPanel" class="hidden bg-sky-50 border-2 border-sky-200 rounded-xl p-4 space-y-2 text-base sm:text-lg" style="-webkit-user-select:text;user-select:text"></div>
       </div>
 
       <div class="flex flex-col gap-2">
@@ -223,6 +237,7 @@ function drawAll(){
     el.innerHTML=inner(it);place(it,el);layer.appendChild(el);
   });
   $('hint').style.display=st.items.length?'none':'flex';
+  renderHelp();
 }
 function select(id){
   st.sel=id;
@@ -237,7 +252,7 @@ function refresh(it){const el=elOf(it);if(el){el.innerHTML=inner(it);place(it,el
 
 function add(c){
   const r=room.getBoundingClientRect();
-  const it={id:'i'+Date.now(),n:c.n,s:c.s,w:c.w,h:c.h,rot:0,flip:false,hue:'0',z:++st.z,
+  const it={id:'i'+Date.now(),cid:c.id,n:c.n,s:c.s,w:c.w,h:c.h,rot:0,flip:false,hue:'0',z:++st.z,
     x:Math.max(10,r.width/2-c.w/2+(Math.random()*40-20)),y:Math.max(10,r.height/2-c.h/2+(Math.random()*40-20))};
   st.items.push(it);drawAll();select(it.id);
 }
@@ -276,13 +291,57 @@ $('tb').addEventListener('click',e=>{
 $('rooms').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const r=ROOMS[b.dataset.k];
   document.querySelectorAll('#rooms .rt').forEach(x=>x.classList.toggle('on',x===b));
-  $('title').textContent='🏡 '+r[2];setWall(r[3]);setFloor(r[4]);st.room=b.dataset.k;st.cat='room';$('likeRoom').textContent=NAMES[b.dataset.k];grid();
+  $('title').textContent='🏡 '+r[2];setWall(r[3]);setFloor(r[4]);st.room=b.dataset.k;st.cat='room';$('likeRoom').textContent=NAMES[b.dataset.k];grid();renderHelp();
 });
 $('walls').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setWall(b.dataset.v);});
 $('floors').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setFloor(b.dataset.v);});
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b){st.cat=b.dataset.c;grid();}});
 $('grid').addEventListener('click',e=>{const b=e.target.closest('button');if(b)add(CAT.find(i=>i.id===b.dataset.id));});
 $('reset').onclick=()=>{st.items=[];select(null);drawAll();};
+
+// ---------- 도움자료 (선생님 확인 후 예시 문장) ----------
+const HELP_PW='1215';
+const HELP={bed1:['bed','beds','침대'],bed2:['bed','beds','침대'],sofa:['sofa','sofas','소파'],tv:['TV','TVs','텔레비전'],chair:['chair','chairs','의자'],desk:['desk','desks','책상'],fridge:['refrigerator','refrigerators','냉장고'],stove:['oven','ovens','오븐'],dtable:['dining table','dining tables','식탁'],tub:['bathtub','bathtubs','욕조'],sink:['sink','sinks','세면대'],toilet:['toilet','toilets','변기'],bench:['bench','benches','벤치'],fountain:['fountain','fountains','분수'],tree:['tree','trees','나무'],plant:['plant','plants','화분'],laptop:['laptop','laptops','노트북'],lamp:['lamp','lamps','램프'],window:['window','windows','창문'],clock:['clock','clocks','시계'],wardrobe:['wardrobe','wardrobes','옷장'],shelf:['bookshelf','bookshelves','책장'],nightstand:['nightstand','nightstands','협탁'],rug:['rug','rugs','러그'],picture:['picture','pictures','그림'],books:['book','books','책'],ball:['ball','balls','공'],pillow:['pillow','pillows','베개'],armchair:['armchair','armchairs','안락의자'],coffee:['coffee table','coffee tables','커피 테이블'],fireplace:['fireplace','fireplaces','벽난로'],ksink:['kitchen sink','kitchen sinks','싱크대'],cabinet:['cabinet','cabinets','벽장'],micro:['microwave','microwaves','전자레인지'],fruit:['fruit bowl','fruit bowls','과일 그릇'],pot:['pot','pots','냄비'],shower:['shower','showers','샤워기'],washer:['washing machine','washing machines','세탁기'],towel:['towel','towels','수건'],duck:['rubber duck','rubber ducks','오리 장난감'],flowers:['flower','flowers','꽃'],swing:['swing','swings','그네'],fence:['fence','fences','울타리'],sun:['sun','suns','해'],cloud:['cloud','clouds','구름'],doghouse:['dog house','dog houses','강아지 집'],mailbox:['mailbox','mailboxes','우체통'],bear:['teddy bear','teddy bears','곰 인형']};
+const NUMW=['','one','two','three','four','five','six','seven','eight','nine','ten'];
+let helpOK=false;
+const artOf=w=>/^[aeiou]/i.test(w)?'an':'a';
+function helpSlots(){
+  const g=new Map();
+  st.items.forEach(it=>{const h=HELP[it.cid];if(!h)return;const o=g.get(h[0])||{h,n:0};o.n++;g.set(h[0],o);});
+  return [...g.values()];
+}
+const hPhrase=o=>o.n===1?'is '+artOf(o.h[0])+' '+o.h[0]:'are '+(NUMW[o.n]||o.n)+' '+o.h[1];
+function renderHelp(){
+  if(!helpOK)return;
+  const sl=helpSlots(),rn=NAMES[st.room];
+  let h='<div class="fh font-bold text-indigo-700">💡 이렇게 써 보세요! <span class="text-xs font-semibold text-slate-500">(파란 글씨를 빈칸에 똑같이 따라 쓰면 돼요)</span></div>';
+  h+='<div>① This is my <span class="chip">'+esc(rn)+'</span>.</div>';
+  if(!sl.length){
+    h+='<div class="text-sm text-slate-600">👆 방에 스티커를 붙이면 그 스티커에 맞는 문장이 여기에 나와요!</div>';
+  }else{
+    const nums=['②','③','④','⑤'];
+    for(let i=0;i<4;i++){
+      const o=sl[i];
+      if(!o){h+='<div class="text-slate-400 text-sm">'+nums[i]+' 스티커를 더 붙이면 문장이 나와요</div>';continue;}
+      h+='<div>'+nums[i]+' There <span class="chip">'+esc(hPhrase(o))+'</span>'+(i===3?', too':'')+'. <span class="text-xs text-slate-500">('+o.h[2]+' '+o.n+'개)</span></div>';
+    }
+    if(sl.length>4)h+='<div class="text-sm text-slate-600">➕ 다른 스티커도 써 볼 수 있어요: '+sl.slice(4).map(o=>'<span class="chip">There '+esc(hPhrase(o))+'.</span>').join(' ')+'</div>';
+  }
+  $('hPanel').innerHTML=h;
+}
+$('hBtn').onclick=()=>{
+  if(helpOK){const hp=$('hPanel');hp.classList.toggle('hidden');$('hBtn').textContent=hp.classList.contains('hidden')?'💡 도움자료 열기':'💡 도움자료 닫기';renderHelp();return;}
+  $('tBtn').classList.toggle('hidden');$('pwBox').classList.add('hidden');
+};
+$('tBtn').onclick=()=>{$('pwBox').classList.remove('hidden');$('pw').focus();};
+function tryPw(){
+  if($('pw').value.trim()===HELP_PW){
+    helpOK=true;$('tBtn').classList.add('hidden');$('pwBox').classList.add('hidden');$('pw').value='';
+    $('hPanel').classList.remove('hidden');$('hBtn').textContent='💡 도움자료 닫기';renderHelp();toast('선생님 확인 완료 ✅');
+  }else{toast('비밀번호가 맞지 않아요');$('pw').value='';$('pw').focus();}
+}
+$('pwOk').onclick=tryPw;
+$('pw').addEventListener('keydown',e=>{if(e.key==='Enter')tryPw();});
 
 // ---------- 틀린 부분 확인 ----------
 const LT='https://api.languagetool.org/v2/check';
