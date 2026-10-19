@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -25,6 +25,12 @@ h1,h2,.fh{font-family:'Fredoka','Apple SD Gothic Neo',sans-serif}
 .item.sel .rh{display:block}
 .blank{border-bottom:3px solid #818cf8;background:#fff;padding:2px 10px;color:#4338ca;font-weight:600;border-radius:6px 6px 0 0;min-width:0;flex:1 1 180px;user-select:text;-webkit-user-select:text}
 .blank:focus{outline:3px solid #f2a93b;outline-offset:2px}
+.blank.bad{border-bottom-color:#ef4444;background:#fef2f2;color:#b91c1c}
+.idin{font-size:1.6rem;font-weight:700;padding:6px 10px;line-height:1.3;text-align:center;border-bottom-width:4px}
+.err{color:#dc2626;font-weight:800;background:#fee2e2;border-bottom:3px wavy #dc2626;padding:0 3px;border-radius:4px}
+.sug{background:#fff;border:2px solid #fca5a5;color:#b91c1c;font-weight:700;border-radius:10px;padding:4px 12px;margin:2px 4px 2px 0}
+.sug:active{background:#fee2e2}
+.bigbtn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.5)}
 .tab{padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;white-space:nowrap;background:#f1f5f9;color:#475569}
 .tab.on{background:#4f46e5;color:#fff}
 .rt{padding:8px 4px;border-radius:12px;font-size:12px;font-weight:600;background:#f8fafc;border:1px solid #e2e8f0;color:#475569}
@@ -59,12 +65,12 @@ h1,h2,.fh{font-family:'Fredoka','Apple SD Gothic Neo',sans-serif}
 
   <section class="lg:col-span-8 flex flex-col gap-4">
     <div id="card" class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 flex flex-col gap-4">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+      <div class="flex flex-col gap-3 border-b border-slate-100 pb-3">
         <div class="fh text-xl font-bold" id="title">🏡 My Dream Bedroom</div>
-        <div class="flex flex-wrap items-center justify-end gap-x-2 gap-y-1 text-sm font-semibold text-slate-600" style="-webkit-user-select:text;user-select:text">
-          <label class="flex items-center gap-1">Class <input id="sCls" inputmode="numeric" maxlength="2" autocomplete="off" class="blank" style="flex:none;width:2.8rem;text-align:center;padding:2px 4px"></label>
-          <label class="flex items-center gap-1">Number <input id="sNum" inputmode="numeric" maxlength="2" autocomplete="off" class="blank" style="flex:none;width:2.8rem;text-align:center;padding:2px 4px"></label>
-          <label class="flex items-center gap-1">Name <input id="sName" maxlength="12" autocomplete="off" class="blank" style="flex:none;width:6.5rem;text-align:center;padding:2px 6px"></label>
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-3 font-bold text-slate-700" style="-webkit-user-select:text;user-select:text;font-size:1.5rem">
+          <label class="flex items-center gap-2 whitespace-nowrap">반 <input id="sCls" inputmode="numeric" maxlength="2" autocomplete="off" class="blank idin" style="flex:none;width:5rem"></label>
+          <label class="flex items-center gap-2 whitespace-nowrap">번호 <input id="sNum" inputmode="numeric" maxlength="2" autocomplete="off" class="blank idin" style="flex:none;width:5rem"></label>
+          <label class="flex items-center gap-2 whitespace-nowrap" style="flex:1 1 14rem">이름 <input id="sName" maxlength="12" autocomplete="off" class="blank idin" style="flex:1 1 9rem;width:9rem"></label>
         </div>
       </div>
 
@@ -89,24 +95,31 @@ h1,h2,.fh{font-family:'Fredoka','Apple SD Gothic Neo',sans-serif}
         <div class="font-bold fh">✏️ Fill in the blanks to describe your room</div>
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 text-base sm:text-lg">
           <p class="fh text-xl font-bold text-indigo-600">Welcome!</p>
-          <p class="flex flex-wrap items-baseline gap-2">This is my <input class="blank" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="blank 1">.</p>
-          <p class="flex flex-wrap items-baseline gap-2">There <input class="blank" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="blank 2">.</p>
-          <p class="flex flex-wrap items-baseline gap-2">There <input class="blank" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="blank 3">.</p>
-          <p class="flex flex-wrap items-baseline gap-2">There <input class="blank" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="blank 4">.</p>
-          <p class="flex flex-wrap items-baseline gap-2">There <input class="blank" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="blank 5">, too.</p>
+          <p class="flex flex-wrap items-baseline gap-2">This is my <input class="blank" data-pre="This is my " data-post="." autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="blank 1">.</p>
+          <p class="flex flex-wrap items-baseline gap-2">There <input class="blank" data-pre="There " data-post="." autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="blank 2">.</p>
+          <p class="flex flex-wrap items-baseline gap-2">There <input class="blank" data-pre="There " data-post="." autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="blank 3">.</p>
+          <p class="flex flex-wrap items-baseline gap-2">There <input class="blank" data-pre="There " data-post="." autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="blank 4">.</p>
+          <p class="flex flex-wrap items-baseline gap-2">There <input class="blank" data-pre="There " data-post=", too." autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="blank 5">, too.</p>
           <p class="font-medium text-slate-700">I like my <span id="likeRoom">bedroom</span>.</p>
         </div>
       </div>
     </div>
-    <button id="share" class="py-3.5 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white fh font-bold text-lg rounded-2xl shadow-lg">🚀 Share with Classmates (Make Poster)</button>
+    <button id="chk" class="bigbtn py-3.5 px-6 bg-gradient-to-r from-amber-400 to-orange-500 text-white fh font-bold text-lg rounded-2xl shadow-lg">🔍 틀린 부분 확인하기</button>
+    <div id="fb" class="hidden bg-white border-2 border-rose-200 rounded-2xl p-4 space-y-3"></div>
+    <button id="done" class="bigbtn hidden py-3.5 px-6 bg-gradient-to-r from-emerald-500 to-green-500 text-white fh font-bold text-lg rounded-2xl shadow-lg">✅ 완성했어요!</button>
+    <button id="share" disabled class="bigbtn py-3.5 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white fh font-bold text-lg rounded-2xl shadow-lg">📸 포스터 저장하기</button>
+    <p id="shint" class="text-center text-xs text-slate-500 -mt-2">① 틀린 부분 확인하기 → ② 완성했어요! → ③ 포스터 저장하기</p>
   </section>
 </main>
 
 <div id="modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl p-4 max-w-2xl w-full max-h-full overflow-auto text-center">
-    <p class="text-sm font-semibold mb-2">📸 Press and hold the image (or right-click) to save it as a JPG!</p>
+    <p id="mhint" class="text-sm font-semibold mb-2">📸 이미지를 꾹 누르거나(컴퓨터는 오른쪽 클릭) JPG로 저장하세요!</p>
     <img id="poster" alt="Room poster" class="w-full rounded-lg border" style="-webkit-user-select:auto;user-select:auto">
-    <button id="close" class="mt-3 px-5 py-2 bg-indigo-600 text-white font-bold rounded-xl">Close</button>
+    <div class="mt-3 flex flex-wrap items-center justify-center gap-3">
+      <button id="close" class="px-5 py-2 bg-indigo-600 text-white font-bold rounded-xl">닫기</button>
+      <a id="padlet" href="https://padlet.com/bonri5/padlet-s024n9lx9rbiaeufcyyy" target="_blank" rel="noopener noreferrer" class="px-5 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-xl no-underline">📌 패들렛에 올리러 가기</a>
+    </div>
   </div>
 </div>
 <div id="toast" class="fixed right-4 z-50 bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-xl opacity-0 transition-opacity pointer-events-none" style="bottom:calc(16px + env(safe-area-inset-bottom,0px))"></div>
@@ -271,22 +284,126 @@ $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b){
 $('grid').addEventListener('click',e=>{const b=e.target.closest('button');if(b)add(CAT.find(i=>i.id===b.dataset.id));});
 $('reset').onclick=()=>{st.items=[];select(null);drawAll();};
 
-// poster -> JPG download
+// ---------- 틀린 부분 확인 ----------
+const LT='https://api.languagetool.org/v2/check';
+const blanksEl=()=>[...document.querySelectorAll('input.blank[data-pre]')];
+const esc=t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const KIND={TYPOS:'철자(스펠링)를 확인해요',CASING:'대문자·소문자를 확인해요',GRAMMAR:'문법을 확인해요',PUNCTUATION:'문장부호를 확인해요',CONFUSED_WORDS:'비슷한 단어를 헷갈렸을 수 있어요',dup:'같은 단어가 두 번 나왔어요',an:'a / an 을 확인해요',i:'I(나)는 항상 대문자예요'};
+let LINES=[];
+
+function localCheck(l){
+  const t=l.full,o=[];let m;
+  const r1=/\b(\w+)\s+\1\b/gi;while((m=r1.exec(t)))o.push({s:m.index,e:m.index+m[0].length,cat:'dup',reps:[m[1]]});
+  const r2=/\ba\s+([aeio]\w*)/gi;while((m=r2.exec(t)))o.push({s:m.index,e:m.index+m[0].length,cat:'an',reps:['an '+m[1]]});
+  const r3=/\ban\s+([bcdfgjklmnpqrstvwyz]\w*)/gi;while((m=r3.exec(t)))o.push({s:m.index,e:m.index+m[0].length,cat:'an',reps:['a '+m[1]]});
+  const r4=/\bi\b/g;while((m=r4.exec(t)))o.push({s:m.index,e:m.index+1,cat:'i',reps:['I']});
+  return o;
+}
+function markSentence(l){
+  let h='',p=0;
+  [...l.errs].sort((a,b)=>a.s-b.s).forEach(e=>{if(e.s<p)return;h+=esc(l.full.slice(p,e.s))+'<span class="err">'+(esc(l.full.slice(e.s,e.e))||'&nbsp;')+'</span>';p=e.e;});
+  return h+esc(l.full.slice(p));
+}
+function renderFb(note){
+  const bad=LINES.filter(l=>l.empty||l.errs.length);
+  let h='<div class="fh font-bold text-lg">🔍 확인 결과</div>';
+  if(!bad.length){
+    h+='<div class="text-emerald-700 font-bold text-lg bg-emerald-50 rounded-xl p-3">🎉 틀린 곳이 없어요! 정말 잘 썼어요.</div>';
+  }else{
+    h+='<p class="text-sm text-slate-600">빨간 부분을 살펴보세요. <b>고쳐도 되고, 그대로 두어도 괜찮아요!</b> (추천 단어를 누르면 바로 고쳐져요)</p>';
+    LINES.forEach((l,li)=>{
+      if(!l.empty&&!l.errs.length)return;
+      h+='<div class="bg-rose-50 rounded-xl p-3"><div class="text-xl font-semibold">'+(l.empty?esc(l.pre)+'<span class="err">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>'+esc(l.post):markSentence(l))+'</div>';
+      if(l.empty)h+='<div class="text-sm mt-1 text-rose-700">✏️ 빈칸을 채워 주세요.</div>';
+      l.errs.forEach((e,ei)=>{
+        const w=l.full.slice(e.s,e.e).trim();
+        h+='<div class="text-sm mt-1 text-slate-700">❗ '+(KIND[e.cat]||'이 부분이 어색해요')+(w?' → <b class="text-rose-600">'+esc(w)+'</b>':'');
+        if(e.reps.length){
+          h+='<div class="mt-1">이렇게 바꿔볼까요? ';
+          const ok=e.s>=l.pre.length&&e.e<=l.pre.length+l.val.length;
+          e.reps.forEach((r,ri)=>{h+=ok?'<button class="sug" data-li="'+li+'" data-ei="'+ei+'" data-ri="'+ri+'">'+esc(r)+'</button>':'<span class="sug">'+esc(r)+'</span>';});
+          h+='</div>';
+        }
+        h+='</div>';
+      });
+      h+='</div>';
+    });
+  }
+  if(note)h+='<p class="text-xs text-slate-500">'+note+'</p>';
+  $('fb').innerHTML=h;$('fb').classList.remove('hidden');
+}
+async function runCheck(){
+  const bs=blanksEl();
+  LINES=bs.map(b=>{const val=b.value.trim();return{b,pre:b.dataset.pre,post:b.dataset.post,val,full:b.dataset.pre+val+b.dataset.post,empty:!val,errs:[]};});
+  bs.forEach(b=>b.classList.remove('bad'));
+  const filled=LINES.filter(l=>!l.empty);
+  let note='';
+  const btn=$('chk');btn.disabled=true;btn.textContent='확인하는 중... 🔎';
+  if(filled.length){
+    let off=0;filled.forEach(l=>{l.start=off;off+=l.full.length+1;});
+    const text=filled.map(l=>l.full).join('\n');
+    try{
+      const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),9000);
+      const r=await fetch(LT,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({text,language:'en-US'}),signal:ctl.signal});
+      clearTimeout(to);
+      if(!r.ok)throw new Error('http '+r.status);
+      const j=await r.json();
+      (j.matches||[]).forEach(m=>{
+        const cid=(m.rule&&m.rule.category&&m.rule.category.id)||'',it=(m.rule&&m.rule.issueType)||'';
+        if(['STYLE','REDUNDANCY','PLAIN_ENGLISH','WIKIPEDIA'].includes(cid)||it==='style')return;
+        const l=filled.find(x=>m.offset>=x.start&&m.offset<=x.start+x.full.length);if(!l)return;
+        const s=m.offset-l.start;
+        l.errs.push({s,e:Math.min(l.full.length,s+Math.max(1,m.length)),cat:cid,reps:(m.replacements||[]).slice(0,3).map(x=>x.value)});
+      });
+    }catch(err){
+      note='인터넷 연결이 불안정해서 간단한 검사만 했어요. 선생님과 한 번 더 읽어 보세요.';
+      filled.forEach(l=>{l.errs=localCheck(l);});
+    }
+  }
+  LINES.forEach(l=>{if(l.empty||l.errs.length)l.b.classList.add('bad');});
+  renderFb(note);
+  btn.disabled=false;btn.textContent='🔍 다시 확인하기';
+  $('done').classList.remove('hidden');
+  $('fb').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+$('chk').onclick=runCheck;
+$('fb').addEventListener('click',e=>{
+  const b=e.target.closest('button.sug');if(!b)return;
+  const l=LINES[+b.dataset.li],er=l.errs[+b.dataset.ei],r=l.errs[+b.dataset.ei].reps[+b.dataset.ri];
+  const a=l.pre.length;
+  l.b.value=l.val.slice(0,er.s-a)+r+l.val.slice(er.e-a);
+  runCheck();
+});
+blanksEl().forEach(b=>b.addEventListener('input',()=>b.classList.remove('bad')));
+$('done').onclick=()=>{
+  $('share').disabled=false;
+  toast('좋아요! 이제 포스터를 저장해요 🎉');
+  $('share').scrollIntoView({behavior:'smooth',block:'center'});
+};
+
+// ---------- 포스터 저장 ----------
 $('share').onclick=()=>{
-  select(null);toast('Making your poster... 📸');
-  if(typeof html2canvas==='undefined'){toast('Poster tool did not load.');return;}
-  html2canvas($('card'),{scale:2,backgroundColor:'#ffffff',logging:false}).then(cv=>{
-    const who=[$('sCls').value.trim()&&'Class'+$('sCls').value.trim(),$('sNum').value.trim()&&'No'+$('sNum').value.trim(),$('sName').value.trim()].filter(Boolean).join('_');
+  select(null);toast('포스터 만드는 중... 📸');
+  if(typeof html2canvas==='undefined'){toast('포스터 도구를 불러오지 못했어요. 인터넷을 확인해 주세요.');return;}
+  html2canvas($('card'),{scale:2,backgroundColor:'#ffffff',logging:false,
+    onclone:d=>{d.querySelectorAll('.bad').forEach(x=>x.classList.remove('bad'));}
+  }).then(cv=>{
+    const who=[$('sCls').value.trim()&&$('sCls').value.trim()+'반',$('sNum').value.trim()&&$('sNum').value.trim()+'번',$('sName').value.trim()].filter(Boolean).join('_');
     const name=(who?who+'_':'')+'My_Dream_'+NAMES[st.room].replace(/\s+/g,'_')+'.jpg';
     cv.toBlob(async blob=>{
       let saved=false;
       try{
         const dl=window.claude?await window.claude.use('downloads'):null;
-        if(dl&&blob){await dl.save({filename:name,data:blob});saved=true;toast('Saved as JPG! 🎉');}
-      }catch(err){if(err&&err.code==='declined'){toast('Download cancelled');return;}}
-      if(!saved){$('poster').src=cv.toDataURL('image/jpeg',0.92);$('modal').classList.remove('hidden');}
+        if(dl&&blob){await dl.save({filename:name,data:blob});saved=true;}
+      }catch(err){if(err&&err.code==='declined'){toast('저장을 취소했어요');return;}}
+      if(!saved&&blob){
+        try{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);saved=true;}catch(e){}
+      }
+      $('poster').src=cv.toDataURL('image/jpeg',0.92);
+      $('mhint').textContent=saved?'✅ 포스터를 저장했어요! 이제 패들렛에 올려 볼까요?':'📸 이미지를 꾹 누르거나(컴퓨터는 오른쪽 클릭) JPG로 저장하세요!';
+      $('modal').classList.remove('hidden');
     },'image/jpeg',0.92);
-  }).catch(()=>toast('Could not make the poster. Try again.'));
+  }).catch(()=>toast('포스터를 만들지 못했어요. 다시 눌러 주세요.'));
 };
 $('close').onclick=()=>$('modal').classList.add('hidden');
 
