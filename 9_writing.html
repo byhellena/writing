@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Room - 영어 학습 웹앱</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0fdf4;
+        }
+        
+        .jua-font {
+            font-family: 'Jua', sans-serif;
+        }
+
+        /* 퀴즈 폭죽 애니메이션 */
+        @keyframes firework {
+            0% { transform: translate(0, 0); opacity: 1; }
+            50% { opacity: 1; }
+            100% { transform: translate(var(--x), var(--y)); opacity: 0; }
+        }
+        .firework-particle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: firework 1s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col items-center justify-between p-2">
+
+    <!-- 상단 헤더 & 탭 메뉴 -->
+    <header class="w-full max-w-7xl mx-auto bg-white shadow-md rounded-2xl p-4 mb-3 flex flex-col md:flex-row items-center justify-between gap-3 border-2 border-emerald-200">
+        <div class="flex items-center gap-3">
+            <span class="text-4xl">🛏️</span>
+            <div>
+                <h1 class="text-3xl md:text-4xl font-black text-emerald-600 jua-font">Welcome to My Room!</h1>
+            </div>
+        </div>
+
+        <!-- 단계 선택 탭 버튼 -->
+        <div class="flex items-center gap-2 bg-emerald-50 p-2 rounded-xl border border-emerald-300">
+            <button onclick="changeLevel(1)" id="btn-level-1" class="px-6 py-2.5 rounded-lg text-xl font-black transition-all shadow-sm bg-emerald-600 text-white">
+                1단계
+            </button>
+            <button onclick="changeLevel(2)" id="btn-level-2" class="px-6 py-2.5 rounded-lg text-xl font-black transition-all text-slate-600 hover:bg-emerald-200">
+                2단계
+            </button>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="w-full max-w-7xl mx-auto flex-1 flex flex-col gap-3 mb-4">
+        
+        <!-- 상단 컨트롤 바 -->
+        <div class="bg-amber-100 border-2 border-amber-300 rounded-xl px-6 py-3 flex items-center justify-end shadow-sm">
+            <div class="flex items-center gap-3">
+                <div id="quiz-btn-container">
+                    <button onclick="openQuizModal()" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-black text-xl rounded-xl shadow-md transition transform hover:scale-105 flex items-center gap-2">
+                        🎮 퀴즈 풀기
+                    </button>
+                </div>
+                <div id="blank-controls" class="hidden flex items-center gap-2">
+                    <button onclick="revealAllBlanks()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg rounded-lg shadow">
+                        전체 정답 보기
+                    </button>
+                    <button onclick="resetBlanks()" class="px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white font-bold text-lg rounded-lg shadow">
+                        다시 초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 문장 카드 리스트 컨테이너 -->
+        <div id="sentences-container" class="grid grid-cols-1 gap-3">
+            <!-- 자바스크립트로 동적 렌더링 -->
+        </div>
+
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="text-center text-slate-400 font-bold text-base py-2">
+        Classroom Interactive Learning Tool
+    </footer>
+
+    <!-- 퀴즈 모달 팝업 -->
+    <div id="quiz-modal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+        <div id="quiz-modal-box" class="bg-white w-full max-w-5xl rounded-3xl p-6 shadow-2xl border-4 border-purple-400 flex flex-col gap-6 relative transition-all duration-300">
+            
+            <button onclick="closeQuizModal()" class="absolute top-4 right-4 text-3xl font-black text-slate-400 hover:text-slate-700">✕</button>
+
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-4xl">🏆</span>
+                    <h2 id="quiz-title" class="text-3xl font-black text-purple-700 jua-font">1번 문제</h2>
+                </div>
+                <div class="text-xl font-bold text-slate-500" id="quiz-progress">문제 1 / 2</div>
+            </div>
+
+            <div id="quiz-question" class="text-3xl md:text-4xl font-black text-center text-slate-800 bg-purple-50 py-4 rounded-2xl border border-purple-200">
+                방 안에 있는 가구가 아닌 것은?
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-2">
+                <div id="option-left" onclick="checkQuizAnswer(1)" class="cursor-pointer bg-slate-50 border-4 border-slate-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl p-6 flex flex-col items-center justify-center gap-4 transition transform hover:scale-105 shadow-md">
+                    <div id="quiz-img-left" class="w-full h-56 bg-white rounded-xl border-2 border-slate-300 flex items-center justify-center shadow-inner overflow-hidden"></div>
+                    <span id="quiz-txt-left" class="text-2xl font-black text-slate-700">침대 (Bed)</span>
+                </div>
+
+                <div id="option-right" onclick="checkQuizAnswer(2)" class="cursor-pointer bg-slate-50 border-4 border-slate-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl p-6 flex flex-col items-center justify-center gap-4 transition transform hover:scale-105 shadow-md">
+                    <div id="quiz-img-right" class="w-full h-56 bg-white rounded-xl border-2 border-slate-300 flex items-center justify-center shadow-inner overflow-hidden"></div>
+                    <span id="quiz-txt-right" class="text-2xl font-black text-slate-700">자동차 (Car)</span>
+                </div>
+            </div>
+
+            <div id="quiz-feedback" class="text-center text-2xl font-black h-12 flex items-center justify-center"></div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button id="next-quiz-btn" onclick="nextQuizStep()" class="hidden px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl rounded-xl shadow-lg transition">
+                    다음 문제 ➡
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 폭죽 효과 컨테이너 -->
+    <div id="fireworks-container" class="fixed inset-0 pointer-events-none z-50 overflow-hidden hidden"></div>
+
+    <script>
+        // 새로운 본문 데이터 정의 (1단계 해석 숨김, 2단계 문장당 1단어 빈칸)
+        const sentencesData = [
+            { id: 1, en: "Welcome!", ko: "환영합니다!", blank2: "Welcome" },
+            { id: 2, en: "This is my room.", ko: "이곳은 나의 방입니다.", blank2: "room" },
+            { id: 3, en: "There is a bed in my room.", ko: "나의 방 안에는 침대가 하나 있습니다.", blank2: "bed" },
+            { id: 4, en: "There is a table.", ko: "테이블이 하나 있습니다.", blank2: "table" },
+            { id: 5, en: "There are two chairs.", ko: "의자가 두 개 있습니다.", blank2: "chairs" },
+            { id: 6, en: "There is a sofa, too.", ko: "소파도 또한 있습니다.", blank2: "sofa" },
+            { id: 7, en: "I like my room.", ko: "나는 나의 방을 좋아합니다.", blank2: "like" }
+        ];
+
+        let currentLevel = 1;
+        let revealedTranslations = {}; // 1단계 해석 토글 상태 추적
+        let blankStates = {};          // 2단계 빈칸 정답 공개 상태 추적
+        let currentStepIndex = -1;     // 리모컨 / 스페이스바 순차 진행 인덱스
+
+        function initApp() {
+            renderSentences();
+        }
+
+        function changeLevel(level) {
+            currentLevel = level;
+            currentStepIndex = -1;
+            revealedTranslations = {};
+            blankStates = {};
+            
+            for(let i=1; i<=2; i++) {
+                const btn = document.getElementById(`btn-level-${i}`);
+                if(i === level) {
+                    btn.className = "px-6 py-2.5 rounded-lg text-xl font-black transition-all shadow-sm bg-emerald-600 text-white";
+                } else {
+                    btn.className = "px-6 py-2.5 rounded-lg text-xl font-black transition-all text-slate-600 hover:bg-emerald-200";
+                }
+            }
+
+            renderSentences();
+        }
+
+        function renderSentences() {
+            const container = document.getElementById("sentences-container");
+            container.innerHTML = "";
+
+            sentencesData.forEach((item, index) => {
+                const card = document.createElement("div");
+                let isHighlighted = (currentStepIndex >= 0 && getStepOwner(currentStepIndex) === index);
+                
+                let baseClass = "border-3 rounded-2xl p-4 shadow-sm transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-3 cursor-pointer group";
+                if (isHighlighted) {
+                    card.className = baseClass + " bg-yellow-300 border-yellow-600 shadow-lg scale-[1.01]";
+                } else {
+                    card.className = baseClass + " bg-white border-slate-200 hover:border-yellow-500 hover:bg-yellow-200";
+                }
+
+                const numBadge = `<span class="bg-emerald-100 text-emerald-800 font-black text-xl px-3 py-1 rounded-xl shrink-0">${index + 1}</span>`;
+                let contentHtml = "";
+
+                if(currentLevel === 1) {
+                    // 1단계: 문장 클릭 시 해석 토글, 스피커 버튼 클릭 시 발음 재생
+                    let isKoVisible = revealedTranslations[index] === true;
+                    contentHtml = `
+                        <div class="flex-1" onclick="toggleTranslation(${index})">
+                            <div class="text-3xl md:text-4xl font-black text-slate-800 tracking-wide">${item.en}</div>
+                            <div class="text-2xl font-bold text-slate-500 mt-1 transition-all ${isKoVisible ? '' : 'hidden'}">(${item.ko})</div>
+                            <div class="text-sm font-bold text-emerald-600 mt-1 ${isKoVisible ? 'hidden' : ''}">👆 문장을 누르면 해석이 나타납니다</div>
+                        </div>
+                        <button onclick="event.stopPropagation(); playTTS('${item.en.replace(/'/g, "\\'")}')" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl rounded-xl shadow flex items-center gap-2 shrink-0">
+                            🔊 스피커
+                        </button>
+                    `;
+                } else {
+                    // 2단계: 문장당 1개 빈칸 채우기
+                    let formattedEn = renderBlankForSentence(item, index);
+                    contentHtml = `
+                        <div class="flex-1">
+                            <div class="text-3xl md:text-4xl font-black text-slate-800 tracking-wide flex flex-wrap items-center gap-2">${formattedEn}</div>
+                            <div class="text-2xl font-bold text-slate-500 mt-1">(${item.ko})</div>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = numBadge + contentHtml;
+                container.appendChild(card);
+            });
+
+            if (currentStepIndex >= 0) {
+                const activeCard = container.children[getStepOwner(currentStepIndex)];
+                if (activeCard) {
+                    activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        function toggleTranslation(idx) {
+            revealedTranslations[idx] = !revealedTranslations[idx];
+            renderSentences();
+        }
+
+        function getTotalSteps() {
+            if (currentLevel === 1) {
+                return sentencesData.length;
+            } else {
+                // 2단계: 문장당 2스텝 (하이라이트 -> 빈칸오픈)
+                return sentencesData.length * 2;
+            }
+        }
+
+        function getStepOwner(stepIdx) {
+            if (currentLevel === 1) {
+                return stepIdx;
+            } else {
+                return Math.floor(stepIdx / 2);
+            }
+        }
+
+        // 리모컨 및 스페이스바 순차 내비게이션
+        window.addEventListener('keydown', (e) => {
+            if (!document.getElementById("quiz-modal").classList.contains("hidden")) return;
+
+            let maxSteps = getTotalSteps();
+            if (e.code === 'Space' || e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (currentStepIndex < maxSteps - 1) {
+                    currentStepIndex++;
+                } else {
+                    currentStepIndex = 0;
+                }
+                
+                if (currentLevel === 1) {
+                    renderSentences();
+                    playTTS(sentencesData[currentStepIndex].en);
+                } else {
+                    applyStepState();
+                    renderSentences();
+                }
+            } else if (e.key === 'PageUp' || e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (currentStepIndex > 0) {
+                    currentStepIndex--;
+                } else {
+                    currentStepIndex = maxSteps - 1;
+                }
+
+                if (currentLevel === 1) {
+                    renderSentences();
+                    playTTS(sentencesData[currentStepIndex].en);
+                } else {
+                    applyStepState();
+                    renderSentences();
+                }
+            }
+        });
+
+        function applyStepState() {
+            blankStates = {};
+            sentencesData.forEach((item, sIdx) => {
+                let sentenceHighlightStep = sIdx * 2;
+                let sentenceOpenStep = sIdx * 2 + 1;
+
+                if (currentStepIndex >= sentenceOpenStep) {
+                    blankStates[sIdx] = true;
+                }
+            });
+        }
+
+        function renderBlankForSentence(item, sIdx) {
+            let originalWords = item.en.split(" ");
+            let targetBlank = item.blank2;
+            let isOpen = blankStates[sIdx] === true;
+
+            return originalWords.map((origWord) => {
+                let cleanWord = origWord.replace(/[.,!?]/g, "");
+                let punct = origWord.replace(/[a-zA-Z]/g, "");
+
+                if (cleanWord.toLowerCase() === targetBlank.toLowerCase()) {
+                    if (isOpen) {
+                        return `<span class="text-emerald-600 bg-emerald-100 px-3 py-1 rounded-lg border-2 border-emerald-400 font-black">${origWord}</span>`;
+                    } else {
+                        return `<button onclick="event.stopPropagation(); toggleBlank(${sIdx})" class="bg-amber-400 hover:bg-amber-500 text-amber-950 px-4 py-1 rounded-xl border-2 border-amber-600 font-black text-2xl md:text-3xl shadow-md">[ ? ]${punct}</button>`;
+                    }
+                } else {
+                    return `<span>${origWord}</span>`;
+                }
+            }).join(" ");
+        }
+
+        function toggleBlank(sIdx) {
+            blankStates[sIdx] = true;
+            renderSentences();
+        }
+
+        function revealAllBlanks() {
+            sentencesData.forEach((item, sIdx) => {
+                blankStates[sIdx] = true;
+            });
+            renderSentences();
+        }
+
+        function resetBlanks() {
+            blankStates = {};
+            currentStepIndex = -1;
+            renderSentences();
+        }
+
+        function playTTS(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => 
+                (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Zira')) && v.lang.includes('en')
+            ) || voices.find(v => v.lang.includes('en-US')) || voices[0];
+
+            if (preferredVoice) utterance.voice = preferredVoice;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // --- 퀴즈 모달 시스템 ---
+        let currentQuizIndex = 1;
+
+        function openQuizModal() {
+            currentQuizIndex = 1;
+            loadQuizData(1);
+            document.getElementById("quiz-modal").classList.remove("hidden");
+            document.getElementById("quiz-feedback").innerHTML = "";
+            document.getElementById("next-quiz-btn").classList.add("hidden");
+        }
+
+        function closeQuizModal() {
+            document.getElementById("quiz-modal").classList.add("hidden");
+            document.getElementById("fireworks-container").classList.add("hidden");
+        }
+
+        function loadQuizData(step) {
+            document.getElementById("quiz-feedback").innerHTML = "";
+            document.getElementById("next-quiz-btn").classList.add("hidden");
+
+            const title = document.getElementById("quiz-title");
+            const progress = document.getElementById("quiz-progress");
+            const question = document.getElementById("quiz-question");
+            const imgLeft = document.getElementById("quiz-img-left");
+            const imgRight = document.getElementById("quiz-img-right");
+            const txtLeft = document.getElementById("quiz-txt-left");
+            const txtRight = document.getElementById("quiz-txt-right");
+
+            if(step === 1) {
+                title.innerText = "1번 문제";
+                progress.innerText = "문제 1 / 2";
+                question.innerText = "방 안에 있는 가구가 아닌 것은?";
+                txtLeft.innerText = "침대 (Bed) - 정답";
+                txtRight.innerText = "자동차 (Car)";
+
+                imgLeft.innerHTML = `<svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#e0f2fe"/><rect x="40" y="60" width="120" height="60" fill="#0284c7" rx="5"/><rect x="50" y="40" width="40" height="30" fill="#facc15" rx="3"/></svg>`;
+                imgRight.innerHTML = `<svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#fee2e2"/><circle cx="70" cy="110" r="15" fill="#334155"/><circle cx="130" cy="110" r="15" fill="#334155"/><path d="M 50 90 L 70 60 L 130 60 L 150 90 Z" fill="#ef4444"/></svg>`;
+            } else {
+                title.innerText = "2번 문제";
+                progress.innerText = "문제 2 / 2";
+                question.innerText = "의자는 몇 개 있었나요?";
+                txtLeft.innerText = "의자 1개";
+                txtRight.innerText = "의자 2개 (정답)";
+
+                imgLeft.innerHTML = `<svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#fef3c7"/><rect x="80" y="60" width="40" height="40" fill="#b45309" rx="3"/><rect x="85" y="100" width="6" height="30" fill="#78350f"/><rect x="109" y="100" width="6" height="30" fill="#78350f"/></svg>`;
+                imgRight.innerHTML = `<svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#dcfce7"/><rect x="40" y="60" width="35" height="35" fill="#15803d" rx="3"/><rect x="120" y="60" width="35" height="35" fill="#15803d" rx="3"/></svg>`;
+            }
+        }
+
+        function checkQuizAnswer(choice) {
+            const feedback = document.getElementById("quiz-feedback");
+            const nextBtn = document.getElementById("next-quiz-btn");
+
+            if(currentQuizIndex === 1) {
+                if(choice === 1) {
+                    feedback.innerHTML = "🎉 <span class='text-emerald-600'>정답입니다! 침대가 있어요!</span> 🎉";
+                    triggerFireworks();
+                    nextBtn.classList.remove("hidden");
+                } else {
+                    feedback.innerHTML = "❌ <span class='text-rose-500'>다시 골라보세요.</span>";
+                }
+            } else if(currentQuizIndex === 2) {
+                if(choice === 2) {
+                    feedback.innerHTML = "🔥 <span class='text-purple-600 font-black'>정답입니다! 의자가 2개(two chairs) 있었어요! 🏆</span>";
+                    triggerFireworks();
+                    nextBtn.classList.remove("hidden");
+                    nextBtn.innerText = "퀴즈 완료 🏁";
+                } else {
+                    feedback.innerHTML = "❌ <span class='text-rose-500'>다시 골라보세요.</span>";
+                }
+            }
+        }
+
+        function nextQuizStep() {
+            if(currentQuizIndex === 1) {
+                currentQuizIndex = 2;
+                loadQuizData(2);
+            } else {
+                closeQuizModal();
+            }
+        }
+
+        function triggerFireworks() {
+            const container = document.getElementById("fireworks-container");
+            container.innerHTML = "";
+            container.classList.remove("hidden");
+            const colors = ['#ef4444', '#3b82f6', '#22c55e', '#facc15', '#a855f7', '#ec4899', '#ffffff'];
+
+            for(let i=0; i<60; i++) {
+                const particle = document.createElement("div");
+                particle.className = "firework-particle";
+                const x = (window.innerWidth / 2) + (Math.random() * 600 - 300);
+                const y = (window.innerHeight / 2) + (Math.random() * 500 - 250);
+                particle.style.left = `${window.innerWidth / 2}px`;
+                particle.style.top = `${window.innerHeight / 2}px`;
+                particle.style.setProperty('--x', `${x - window.innerWidth / 2}px`);
+                particle.style.setProperty('--y', `${y - window.innerHeight / 2}px`);
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.animationDuration = `${1 + Math.random() * 2}s`;
+                container.appendChild(particle);
+            }
+
+            setTimeout(() => {
+                container.classList.add("hidden");
+            }, 6000);
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
