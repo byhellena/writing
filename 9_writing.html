@@ -31,6 +31,19 @@
             border-radius: 50%;
             animation: firework 1s ease-out forwards;
         }
+
+        /* EDM 스트로브 디스코 효과 */
+        @keyframes edmStrobe {
+            0% { background-color: #ff00ff; color: #ffff00; }
+            20% { background-color: #00ffff; color: #ff0000; }
+            40% { background-color: #ffff00; color: #0000ff; }
+            60% { background-color: #ff0000; color: #00ff00; }
+            80% { background-color: #00ff00; color: #ff00ff; }
+            100% { background-color: #1e1b4b; color: #ffffff; }
+        }
+        .edm-mode {
+            animation: edmStrobe 0.25s infinite;
+        }
     </style>
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col items-center justify-between p-2">
@@ -104,19 +117,11 @@
             </div>
 
             <div id="quiz-question" class="text-3xl md:text-4xl font-black text-center text-slate-800 bg-purple-50 py-4 rounded-2xl border border-purple-200">
-                방 안에 있는 가구가 아닌 것은?
+                내 방에 있는 것이 아닌 것은?
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-2">
-                <div id="option-left" onclick="checkQuizAnswer(1)" class="cursor-pointer bg-slate-50 border-4 border-slate-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl p-6 flex flex-col items-center justify-center gap-4 transition transform hover:scale-105 shadow-md">
-                    <div id="quiz-img-left" class="w-full h-56 bg-white rounded-xl border-2 border-slate-300 flex items-center justify-center shadow-inner overflow-hidden"></div>
-                    <span id="quiz-txt-left" class="text-2xl font-black text-slate-700">침대 (Bed)</span>
-                </div>
-
-                <div id="option-right" onclick="checkQuizAnswer(2)" class="cursor-pointer bg-slate-50 border-4 border-slate-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl p-6 flex flex-col items-center justify-center gap-4 transition transform hover:scale-105 shadow-md">
-                    <div id="quiz-img-right" class="w-full h-56 bg-white rounded-xl border-2 border-slate-300 flex items-center justify-center shadow-inner overflow-hidden"></div>
-                    <span id="quiz-txt-right" class="text-2xl font-black text-slate-700">자동차 (Car)</span>
-                </div>
+            <div id="quiz-options-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 my-2">
+                <!-- 동적 렌더링 -->
             </div>
 
             <div id="quiz-feedback" class="text-center text-2xl font-black h-12 flex items-center justify-center"></div>
@@ -133,7 +138,6 @@
     <div id="fireworks-container" class="fixed inset-0 pointer-events-none z-50 overflow-hidden hidden"></div>
 
     <script>
-        // 새로운 본문 데이터 정의 (1단계 해석 숨김, 2단계 문장당 1단어 빈칸)
         const sentencesData = [
             { id: 1, en: "Welcome!", ko: "환영합니다!", blank2: "Welcome" },
             { id: 2, en: "This is my room.", ko: "이곳은 나의 방입니다.", blank2: "room" },
@@ -145,9 +149,9 @@
         ];
 
         let currentLevel = 1;
-        let revealedTranslations = {}; // 1단계 해석 토글 상태 추적
-        let blankStates = {};          // 2단계 빈칸 정답 공개 상태 추적
-        let currentStepIndex = -1;     // 리모컨 / 스페이스바 순차 진행 인덱스
+        let revealedTranslations = {}; 
+        let blankStates = {};          
+        let currentStepIndex = -1;     
 
         function initApp() {
             renderSentences();
@@ -190,7 +194,6 @@
                 let contentHtml = "";
 
                 if(currentLevel === 1) {
-                    // 1단계: 문장 클릭 시 해석 토글, 스피커 버튼 클릭 시 발음 재생
                     let isKoVisible = revealedTranslations[index] === true;
                     contentHtml = `
                         <div class="flex-1" onclick="toggleTranslation(${index})">
@@ -203,7 +206,6 @@
                         </button>
                     `;
                 } else {
-                    // 2단계: 문장당 1개 빈칸 채우기
                     let formattedEn = renderBlankForSentence(item, index);
                     contentHtml = `
                         <div class="flex-1">
@@ -231,34 +233,23 @@
         }
 
         function getTotalSteps() {
-            if (currentLevel === 1) {
-                return sentencesData.length;
-            } else {
-                // 2단계: 문장당 2스텝 (하이라이트 -> 빈칸오픈)
-                return sentencesData.length * 2;
-            }
+            if (currentLevel === 1) return sentencesData.length;
+            return sentencesData.length * 2;
         }
 
         function getStepOwner(stepIdx) {
-            if (currentLevel === 1) {
-                return stepIdx;
-            } else {
-                return Math.floor(stepIdx / 2);
-            }
+            if (currentLevel === 1) return stepIdx;
+            return Math.floor(stepIdx / 2);
         }
 
-        // 리모컨 및 스페이스바 순차 내비게이션
         window.addEventListener('keydown', (e) => {
             if (!document.getElementById("quiz-modal").classList.contains("hidden")) return;
 
             let maxSteps = getTotalSteps();
             if (e.code === 'Space' || e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                 e.preventDefault();
-                if (currentStepIndex < maxSteps - 1) {
-                    currentStepIndex++;
-                } else {
-                    currentStepIndex = 0;
-                }
+                if (currentStepIndex < maxSteps - 1) currentStepIndex++;
+                else currentStepIndex = 0;
                 
                 if (currentLevel === 1) {
                     renderSentences();
@@ -269,11 +260,8 @@
                 }
             } else if (e.key === 'PageUp' || e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                 e.preventDefault();
-                if (currentStepIndex > 0) {
-                    currentStepIndex--;
-                } else {
-                    currentStepIndex = maxSteps - 1;
-                }
+                if (currentStepIndex > 0) currentStepIndex--;
+                else currentStepIndex = maxSteps - 1;
 
                 if (currentLevel === 1) {
                     renderSentences();
@@ -288,12 +276,8 @@
         function applyStepState() {
             blankStates = {};
             sentencesData.forEach((item, sIdx) => {
-                let sentenceHighlightStep = sIdx * 2;
                 let sentenceOpenStep = sIdx * 2 + 1;
-
-                if (currentStepIndex >= sentenceOpenStep) {
-                    blankStates[sIdx] = true;
-                }
+                if (currentStepIndex >= sentenceOpenStep) blankStates[sIdx] = true;
             });
         }
 
@@ -324,9 +308,7 @@
         }
 
         function revealAllBlanks() {
-            sentencesData.forEach((item, sIdx) => {
-                blankStates[sIdx] = true;
-            });
+            sentencesData.forEach((item, sIdx) => { blankStates[sIdx] = true; });
             renderSentences();
         }
 
@@ -352,6 +334,66 @@
             window.speechSynthesis.speak(utterance);
         }
 
+        // --- 웹 오디오 효과음 신시사이저 ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+        }
+
+        function playFanfareSound() {
+            initAudio();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, idx) => {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = freq;
+                let startTime = audioCtx.currentTime + (idx * 0.12);
+                let duration = idx === 3 ? 0.5 : 0.1;
+                gain.gain.setValueAtTime(0.3, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            });
+        }
+
+        let edmInterval = null;
+        function playEDMPartySound() {
+            initAudio();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            let beatCount = 0;
+            edmInterval = setInterval(() => {
+                if(beatCount > 16) {
+                    stopEDMSound();
+                    return;
+                }
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(beatCount % 2 === 0 ? 150 : 300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15);
+                beatCount++;
+            }, 180);
+        }
+
+        function stopEDMSound() {
+            if(edmInterval) {
+                clearInterval(edmInterval);
+                edmInterval = null;
+            }
+        }
+
         // --- 퀴즈 모달 시스템 ---
         let currentQuizIndex = 1;
 
@@ -361,66 +403,105 @@
             document.getElementById("quiz-modal").classList.remove("hidden");
             document.getElementById("quiz-feedback").innerHTML = "";
             document.getElementById("next-quiz-btn").classList.add("hidden");
+            document.getElementById("quiz-modal-box").classList.remove("edm-mode");
+            stopEDMSound();
         }
 
         function closeQuizModal() {
             document.getElementById("quiz-modal").classList.add("hidden");
             document.getElementById("fireworks-container").classList.add("hidden");
+            document.getElementById("quiz-modal-box").classList.remove("edm-mode");
+            stopEDMSound();
         }
 
         function loadQuizData(step) {
             document.getElementById("quiz-feedback").innerHTML = "";
             document.getElementById("next-quiz-btn").classList.add("hidden");
+            document.getElementById("quiz-modal-box").classList.remove("edm-mode");
+            stopEDMSound();
 
             const title = document.getElementById("quiz-title");
             const progress = document.getElementById("quiz-progress");
             const question = document.getElementById("quiz-question");
-            const imgLeft = document.getElementById("quiz-img-left");
-            const imgRight = document.getElementById("quiz-img-right");
-            const txtLeft = document.getElementById("quiz-txt-left");
-            const txtRight = document.getElementById("quiz-txt-right");
+            const optionsContainer = document.getElementById("quiz-options-container");
 
             if(step === 1) {
                 title.innerText = "1번 문제";
                 progress.innerText = "문제 1 / 2";
-                question.innerText = "방 안에 있는 가구가 아닌 것은?";
-                txtLeft.innerText = "침대 (Bed) - 정답";
-                txtRight.innerText = "자동차 (Car)";
+                question.innerText = "내 방에 있는 것이 아닌 것은?";
 
-                imgLeft.innerHTML = `<svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#e0f2fe"/><rect x="40" y="60" width="120" height="60" fill="#0284c7" rx="5"/><rect x="50" y="40" width="40" height="30" fill="#facc15" rx="3"/></svg>`;
-                imgRight.innerHTML = `<svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#fee2e2"/><circle cx="70" cy="110" r="15" fill="#334155"/><circle cx="130" cy="110" r="15" fill="#334155"/><path d="M 50 90 L 70 60 L 130 60 L 150 90 Z" fill="#ef4444"/></svg>`;
+                optionsContainer.innerHTML = `
+                    <div onclick="checkQuizAnswer(1, 1)" class="cursor-pointer bg-slate-50 border-4 border-slate-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl p-6 flex flex-col items-center justify-center gap-4 transition transform hover:scale-105 shadow-md">
+                        <div class="w-full h-56 bg-white rounded-xl border-2 border-slate-300 flex items-center justify-center shadow-inner overflow-hidden">
+                            <svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#fef3c7"/><rect x="50" y="50" width="100" height="60" fill="#b45309" rx="3"/><rect x="60" y="30" width="15" height="25" fill="#ef4444"/><rect x="125" y="30" width="15" height="25" fill="#3b82f6"/></svg>
+                        </div>
+                        <span class="text-2xl font-black text-slate-700">Table (테이블)</span>
+                    </div>
+                    <div onclick="checkQuizAnswer(1, 2)" class="cursor-pointer bg-slate-50 border-4 border-slate-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl p-6 flex flex-col items-center justify-center gap-4 transition transform hover:scale-105 shadow-md">
+                        <div class="w-full h-56 bg-white rounded-xl border-2 border-slate-300 flex items-center justify-center shadow-inner overflow-hidden">
+                            <svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#fce7f3"/><rect x="30" y="60" width="140" height="50" fill="#f43f5e" rx="10"/><rect x="25" y="45" width="25" height="40" fill="#be123c" rx="5"/><rect x="150" y="45" width="25" height="40" fill="#be123c" rx="5"/></svg>
+                        </div>
+                        <span class="text-2xl font-black text-slate-700">Sofa (소파)</span>
+                    </div>
+                    <div onclick="checkQuizAnswer(1, 3)" class="cursor-pointer bg-slate-50 border-4 border-slate-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl p-6 flex flex-col items-center justify-center gap-4 transition transform hover:scale-105 shadow-md md:col-span-2">
+                        <div class="w-full h-40 bg-white rounded-xl border-2 border-slate-300 flex items-center justify-center shadow-inner overflow-hidden">
+                            <svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#e0f2fe"/><rect x="40" y="70" width="120" height="45" fill="#0284c7" rx="3"/><rect x="50" y="30" width="50" height="40" fill="#facc15" rx="3"/><rect x="45" y="115" width="10" height="20" fill="#334155"/><rect x="145" y="115" width="10" height="20" fill="#334155"/></svg>
+                        </div>
+                        <span class="text-2xl font-black text-slate-700">Desk (책상) - 정답</span>
+                    </div>
+                `;
             } else {
                 title.innerText = "2번 문제";
                 progress.innerText = "문제 2 / 2";
                 question.innerText = "의자는 몇 개 있었나요?";
-                txtLeft.innerText = "의자 1개";
-                txtRight.innerText = "의자 2개 (정답)";
 
-                imgLeft.innerHTML = `<svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#fef3c7"/><rect x="80" y="60" width="40" height="40" fill="#b45309" rx="3"/><rect x="85" y="100" width="6" height="30" fill="#78350f"/><rect x="109" y="100" width="6" height="30" fill="#78350f"/></svg>`;
-                imgRight.innerHTML = `<svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#dcfce7"/><rect x="40" y="60" width="35" height="35" fill="#15803d" rx="3"/><rect x="120" y="60" width="35" height="35" fill="#15803d" rx="3"/></svg>`;
+                optionsContainer.className = "grid grid-cols-1 md:grid-cols-3 gap-4 my-2";
+                optionsContainer.innerHTML = `
+                    <div onclick="checkQuizAnswer(2, 1)" class="cursor-pointer bg-slate-50 border-4 border-slate-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl p-4 flex flex-col items-center justify-center gap-3 transition transform hover:scale-105 shadow-md">
+                        <div class="w-full h-36 bg-white rounded-xl border-2 border-slate-300 flex items-center justify-center shadow-inner overflow-hidden">
+                            <svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#fef3c7"/><rect x="80" y="60" width="40" height="40" fill="#b45309" rx="3"/><rect x="85" y="100" width="6" height="30" fill="#78350f"/><rect x="109" y="100" width="6" height="30" fill="#78350f"/></svg>
+                        </div>
+                        <span class="text-xl font-black text-slate-700">의자 1개</span>
+                    </div>
+                    <div onclick="checkQuizAnswer(2, 2)" class="cursor-pointer bg-slate-50 border-4 border-slate-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl p-4 flex flex-col items-center justify-center gap-3 transition transform hover:scale-105 shadow-md">
+                        <div class="w-full h-36 bg-white rounded-xl border-2 border-slate-300 flex items-center justify-center shadow-inner overflow-hidden">
+                            <svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#dcfce7"/><rect x="40" y="60" width="35" height="35" fill="#15803d" rx="3"/><rect x="120" y="60" width="35" height="35" fill="#15803d" rx="3"/></svg>
+                        </div>
+                        <span class="text-xl font-black text-slate-700">의자 2개 (정답)</span>
+                    </div>
+                    <div onclick="checkQuizAnswer(2, 3)" class="cursor-pointer bg-slate-50 border-4 border-slate-200 hover:border-purple-500 hover:bg-purple-50 rounded-2xl p-4 flex flex-col items-center justify-center gap-3 transition transform hover:scale-105 shadow-md">
+                        <div class="w-full h-36 bg-white rounded-xl border-2 border-slate-300 flex items-center justify-center shadow-inner overflow-hidden">
+                            <svg viewBox="0 0 200 150" class="w-full h-full"><rect width="200" height="150" fill="#ede9fe"/><rect x="25" y="60" width="30" height="30" fill="#7c3aed" rx="2"/><rect x="85" y="60" width="30" height="30" fill="#7c3aed" rx="2"/><rect x="145" y="60" width="30" height="30" fill="#7c3aed" rx="2"/></svg>
+                        </div>
+                        <span class="text-xl font-black text-slate-700">의자 3개</span>
+                    </div>
+                `;
             }
         }
 
-        function checkQuizAnswer(choice) {
+        function checkQuizAnswer(quizNum, choice) {
             const feedback = document.getElementById("quiz-feedback");
             const nextBtn = document.getElementById("next-quiz-btn");
+            const modalBox = document.getElementById("quiz-modal-box");
 
-            if(currentQuizIndex === 1) {
-                if(choice === 1) {
-                    feedback.innerHTML = "🎉 <span class='text-emerald-600'>정답입니다! 침대가 있어요!</span> 🎉";
+            if(quizNum === 1) {
+                if(choice === 3) { // Desk가 정답
+                    feedback.innerHTML = "🎉 <span class='text-emerald-600'>정답입니다! 책상(Desk)은 본문에 없어요!</span> 🎉";
+                    playFanfareSound();
                     triggerFireworks();
                     nextBtn.classList.remove("hidden");
                 } else {
-                    feedback.innerHTML = "❌ <span class='text-rose-500'>다시 골라보세요.</span>";
+                    feedback.innerHTML = "❌ <span class='text-rose-500'>틀렸습니다! 본문을 떠올려보세요.</span>";
                 }
-            } else if(currentQuizIndex === 2) {
-                if(choice === 2) {
-                    feedback.innerHTML = "🔥 <span class='text-purple-600 font-black'>정답입니다! 의자가 2개(two chairs) 있었어요! 🏆</span>";
-                    triggerFireworks();
+            } else if(quizNum === 2) {
+                if(choice === 2) { // 의자 2개가 정답
+                    feedback.innerHTML = "🔥 <span class='text-fuchsia-600 font-black text-3xl'>YEAH! 의자 2개(two chairs) 정답! EDM 파티 타임! 🎸✨</span>";
+                    playEDMPartySound();
+                    modalBox.classList.add("edm-mode");
                     nextBtn.classList.remove("hidden");
                     nextBtn.innerText = "퀴즈 완료 🏁";
                 } else {
-                    feedback.innerHTML = "❌ <span class='text-rose-500'>다시 골라보세요.</span>";
+                    feedback.innerHTML = "❌ <span class='text-rose-500'>아쉽습니다! 다시 골라보세요.</span>";
                 }
             }
         }
@@ -428,6 +509,7 @@
         function nextQuizStep() {
             if(currentQuizIndex === 1) {
                 currentQuizIndex = 2;
+                document.getElementById("quiz-options-container").className = "grid grid-cols-1 md:grid-cols-2 gap-6 my-2";
                 loadQuizData(2);
             } else {
                 closeQuizModal();
