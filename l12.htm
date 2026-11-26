@@ -231,7 +231,7 @@ input,select,textarea{font-family:'Nunito',sans-serif;}
   <div id="screen-write-inner">
     <div class="section-title">✏️ 내 겨울방학 계획 쓰기</div>
     <div class="ocr-zone">
-      <p>사진을 고른 뒤 영어 답안 세 줄만 선택해 주세요.</p>
+      <p>답안 세 줄이 잘 보이게 사진을 찍거나 골라 주세요.</p>
       <label class="ocr-label">
         📷 사진 찍기
         <input type="file" accept="image/*" capture="environment" class="hidden" onchange="processOCR(event)">
@@ -438,6 +438,7 @@ let guessAlreadyCorrect = false;
 const CARD_COLORS = ['yellow','blue','green','pink'];
 const PINS = ['📌','📎','🖇️','🔖'];
 const UNIT12_AI_ENABLED = true;
+const USE_CROP = false;   // 이름·반 번호 칸이 없어서 드래그 선택 단계를 생략 (true로 바꾸면 다시 켜짐)
 const FIELD_IDS = ['f-plan1','f-plan2','f-plan3'];
 
 function esc(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -685,7 +686,7 @@ async function processOCR(event){
   dbg('');
   let worker = null;
   try {
-    const file = await selectAnswerImage(original);
+    const file = USE_CROP ? await selectAnswerImage(original) : original;
     if(!file) return;
     status.classList.remove('hidden');
     let n = 0;
